@@ -8,12 +8,33 @@ import { useImmersiveStore } from './stores/immersiveStore';
 import { api } from './api';
 import './App.css';
 
+// Helper to safely access localStorage
+const getStoredValue = (key, defaultValue) => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored !== null ? JSON.parse(stored) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
 function App() {
-  const [showLanding, setShowLanding] = useState(true);
+  // Restore state from localStorage on initial load
+  const [showLanding, setShowLanding] = useState(() => getStoredValue('llm-council-show-landing', true));
   const [conversations, setConversations] = useState([]);
-  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [currentConversationId, setCurrentConversationId] = useState(() => getStoredValue('llm-council-conversation-id', null));
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Persist showLanding to localStorage
+  useEffect(() => {
+    localStorage.setItem('llm-council-show-landing', JSON.stringify(showLanding));
+  }, [showLanding]);
+
+  // Persist currentConversationId to localStorage
+  useEffect(() => {
+    localStorage.setItem('llm-council-conversation-id', JSON.stringify(currentConversationId));
+  }, [currentConversationId]);
 
   // Immersive mode state from Zustand
   const {
