@@ -45,7 +45,8 @@ app = FastAPI(title="LLM Council API")
 
 # Enable CORS
 import os
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
+DEFAULT_CORS = "http://localhost:5173,http://localhost:3000,https://my-llm-council.up.railway.app"
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", DEFAULT_CORS).split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
