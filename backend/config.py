@@ -8,6 +8,10 @@ load_dotenv()
 # OpenRouter API key
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
+# MongoDB connection (for persistent storage)
+MONGODB_URI = os.getenv("MONGODB_URI")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "llm_council")
+
 # Council members - list of OpenRouter model identifiers
 COUNCIL_MODELS = [
     "openai/gpt-5.1",

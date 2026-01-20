@@ -1,21 +1,43 @@
-"""JSON-based storage for conversations."""
+"""MongoDB-based storage for conversations."""
 
-import json
-import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from pathlib import Path
-from .config import DATA_DIR
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+from .config import MONGODB_URI, MONGODB_DB_NAME
+
+# MongoDB client (lazy initialization)
+_client = None
+_db = None
 
 
-def ensure_data_dir():
-    """Ensure the data directory exists."""
-    Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
+def get_db():
+    """Get MongoDB database connection (lazy initialization)."""
+    global _client, _db
+
+    if _db is not None:
+        return _db
+
+    if not MONGODB_URI:
+        raise ValueError(
+            "MONGODB_URI environment variable not set. "
+            "Please add your MongoDB connection string to Railway variables."
+        )
+
+    try:
+        _client = MongoClient(MONGODB_URI)
+        # Test connection
+        _client.admin.command('ping')
+        _db = _client[MONGODB_DB_NAME]
+        print(f"Connected to MongoDB database: {MONGODB_DB_NAME}")
+        return _db
+    except ConnectionFailure as e:
+        raise ConnectionFailure(f"Failed to connect to MongoDB: {e}")
 
 
-def get_conversation_path(conversation_id: str) -> str:
-    """Get the file path for a conversation."""
-    return os.path.join(DATA_DIR, f"{conversation_id}.json")
+def get_conversations_collection():
+    """Get the conversations collection."""
+    return get_db().conversations
 
 
 def create_conversation(conversation_id: str) -> Dict[str, Any]:
@@ -28,21 +50,18 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
     Returns:
         New conversation dict
     """
-    ensure_data_dir()
-
     conversation = {
+        "_id": conversation_id,
         "id": conversation_id,
         "created_at": datetime.utcnow().isoformat(),
         "title": "New Conversation",
         "messages": []
     }
 
-    # Save to file
-    path = get_conversation_path(conversation_id)
-    with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+    get_conversations_collection().insert_one(conversation)
 
-    return conversation
+    # Return without _id for API compatibility
+    return {k: v for k, v in conversation.items() if k != "_id"}
 
 
 def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
@@ -55,13 +74,13 @@ def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
     Returns:
         Conversation dict or None if not found
     """
-    path = get_conversation_path(conversation_id)
+    doc = get_conversations_collection().find_one({"_id": conversation_id})
 
-    if not os.path.exists(path):
+    if doc is None:
         return None
 
-    with open(path, 'r') as f:
-        return json.load(f)
+    # Remove MongoDB _id field for API compatibility
+    return {k: v for k, v in doc.items() if k != "_id"}
 
 
 def save_conversation(conversation: Dict[str, Any]):
@@ -71,11 +90,16 @@ def save_conversation(conversation: Dict[str, Any]):
     Args:
         conversation: Conversation dict to save
     """
-    ensure_data_dir()
+    conversation_id = conversation['id']
 
-    path = get_conversation_path(conversation['id'])
-    with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+    # Use _id as the MongoDB document ID
+    doc = {**conversation, "_id": conversation_id}
+
+    get_conversations_collection().replace_one(
+        {"_id": conversation_id},
+        doc,
+        upsert=True
+    )
 
 
 def list_conversations() -> List[Dict[str, Any]]:
@@ -85,21 +109,21 @@ def list_conversations() -> List[Dict[str, Any]]:
     Returns:
         List of conversation metadata dicts
     """
-    ensure_data_dir()
-
     conversations = []
-    for filename in os.listdir(DATA_DIR):
-        if filename.endswith('.json'):
-            path = os.path.join(DATA_DIR, filename)
-            with open(path, 'r') as f:
-                data = json.load(f)
-                # Return metadata only
-                conversations.append({
-                    "id": data["id"],
-                    "created_at": data["created_at"],
-                    "title": data.get("title", "New Conversation"),
-                    "message_count": len(data["messages"])
-                })
+
+    # Only fetch the fields we need for the list view
+    cursor = get_conversations_collection().find(
+        {},
+        {"_id": 0, "id": 1, "created_at": 1, "title": 1, "messages": 1}
+    )
+
+    for doc in cursor:
+        conversations.append({
+            "id": doc["id"],
+            "created_at": doc["created_at"],
+            "title": doc.get("title", "New Conversation"),
+            "message_count": len(doc.get("messages", []))
+        })
 
     # Sort by creation time, newest first
     conversations.sort(key=lambda x: x["created_at"], reverse=True)
@@ -115,16 +139,13 @@ def add_user_message(conversation_id: str, content: str):
         conversation_id: Conversation identifier
         content: User message content
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    result = get_conversations_collection().update_one(
+        {"_id": conversation_id},
+        {"$push": {"messages": {"role": "user", "content": content}}}
+    )
+
+    if result.matched_count == 0:
         raise ValueError(f"Conversation {conversation_id} not found")
-
-    conversation["messages"].append({
-        "role": "user",
-        "content": content
-    })
-
-    save_conversation(conversation)
 
 
 def add_assistant_message(
@@ -148,10 +169,6 @@ def add_assistant_message(
         devils_advocate: Optional devil's advocate challenge
         debate_rounds: Optional list of debate round info
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
-        raise ValueError(f"Conversation {conversation_id} not found")
-
     message = {
         "role": "assistant",
         "stage1": stage1,
@@ -167,8 +184,13 @@ def add_assistant_message(
     if debate_rounds:
         message["debate_rounds"] = debate_rounds
 
-    conversation["messages"].append(message)
-    save_conversation(conversation)
+    result = get_conversations_collection().update_one(
+        {"_id": conversation_id},
+        {"$push": {"messages": message}}
+    )
+
+    if result.matched_count == 0:
+        raise ValueError(f"Conversation {conversation_id} not found")
 
 
 def update_conversation_title(conversation_id: str, title: str):
@@ -179,9 +201,10 @@ def update_conversation_title(conversation_id: str, title: str):
         conversation_id: Conversation identifier
         title: New title for the conversation
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
-        raise ValueError(f"Conversation {conversation_id} not found")
+    result = get_conversations_collection().update_one(
+        {"_id": conversation_id},
+        {"$set": {"title": title}}
+    )
 
-    conversation["title"] = title
-    save_conversation(conversation)
+    if result.matched_count == 0:
+        raise ValueError(f"Conversation {conversation_id} not found")
