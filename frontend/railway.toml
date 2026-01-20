@@ -2,5 +2,8 @@
 builder = "nixpacks"
 buildCommand = "npm install && npm run build"
 
+[build.env]
+NIXPACKS_NODE_VERSION = "20"
+
 [deploy]
 startCommand = "node_modules/.bin/serve dist -s -l ${PORT:-3000}"
