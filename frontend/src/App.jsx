@@ -3,11 +3,13 @@ import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import CouncilChamber from './components/immersive/CouncilChamber';
 import VoiceController from './components/voice/VoiceController';
+import LandingPage from './components/landing/LandingPage';
 import { useImmersiveStore } from './stores/immersiveStore';
 import { api } from './api';
 import './App.css';
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
@@ -224,6 +226,15 @@ function App() {
   const handleToggleVoice = useCallback(() => {
     setVoiceEnabled(!voiceEnabled);
   }, [voiceEnabled, setVoiceEnabled]);
+
+  const handleEnterCouncil = useCallback(() => {
+    setShowLanding(false);
+  }, []);
+
+  // Show landing page initially
+  if (showLanding) {
+    return <LandingPage onEnterCouncil={handleEnterCouncil} />;
+  }
 
   return (
     <div className="app">

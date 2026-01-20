@@ -43,10 +43,12 @@ from .observer.analyzer import get_analysis_history, get_aggregate_statistics
 
 app = FastAPI(title="LLM Council API")
 
-# Enable CORS for local development
+# Enable CORS
+import os
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
