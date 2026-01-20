@@ -131,28 +131,43 @@ def add_assistant_message(
     conversation_id: str,
     stage1: List[Dict[str, Any]],
     stage2: List[Dict[str, Any]],
-    stage3: Dict[str, Any]
+    stage3: Dict[str, Any],
+    rebuttals: Optional[List[Dict[str, Any]]] = None,
+    devils_advocate: Optional[Dict[str, Any]] = None,
+    debate_rounds: Optional[List[Dict[str, Any]]] = None
 ):
     """
-    Add an assistant message with all 3 stages to a conversation.
+    Add an assistant message with all stages to a conversation.
 
     Args:
         conversation_id: Conversation identifier
         stage1: List of individual model responses
         stage2: List of model rankings
         stage3: Final synthesized response
+        rebuttals: Optional list of rebuttals from Tier 2 debate
+        devils_advocate: Optional devil's advocate challenge
+        debate_rounds: Optional list of debate round info
     """
     conversation = get_conversation(conversation_id)
     if conversation is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    conversation["messages"].append({
+    message = {
         "role": "assistant",
         "stage1": stage1,
         "stage2": stage2,
         "stage3": stage3
-    })
+    }
 
+    # Add optional Tier 2 fields if present
+    if rebuttals:
+        message["rebuttals"] = rebuttals
+    if devils_advocate:
+        message["devils_advocate"] = devils_advocate
+    if debate_rounds:
+        message["debate_rounds"] = debate_rounds
+
+    conversation["messages"].append(message)
     save_conversation(conversation)
 
 

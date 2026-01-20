@@ -1,0 +1,130 @@
+.devils-advocate {
+  margin-top: 20px;
+}
+
+.devils-advocate-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.devils-advocate-toggle:hover {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #f87171;
+}
+
+.devils-advocate-toggle.expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.devils-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.devils-header-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.devils-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #991b1b;
+}
+
+.devils-subtitle {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+.devils-toggle-icon {
+  color: #dc2626;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Content area */
+.devils-advocate-content {
+  background: white;
+  border: 1px solid #fca5a5;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.challenger-model,
+.target-model {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.challenger-model {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.target-model {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.challenge-body {
+  padding: 20px;
+}
+
+.challenge-body .markdown-content {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #374151;
+}
+
+/* Emphasize key points in the challenge */
+.challenge-body .markdown-content strong {
+  color: #dc2626;
+}
+
+.challenge-body .markdown-content ol,
+.challenge-body .markdown-content ul {
+  background: #fef2f2;
+  padding: 12px 12px 12px 36px;
+  border-radius: 8px;
+  border-left: 3px solid #f87171;
+}
+
+.challenge-body .markdown-content li {
+  margin-bottom: 8px;
+}
+
+.challenge-footer {
+  padding: 12px 18px;
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+.challenge-note {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}

@@ -1,0 +1,164 @@
+.voice-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 12px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.voice-controls.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Progress indicator */
+.voice-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 120px;
+}
+
+.progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.progress-count {
+  font-size: 11px;
+  color: #666;
+}
+
+/* Main controls */
+.voice-main-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.voice-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: scale(1.05);
+}
+
+.voice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.voice-btn.play-btn {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: white;
+  font-size: 18px;
+}
+
+.voice-btn.play-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #357abd, #2a6398);
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+}
+
+/* Speed control */
+.voice-speed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.speed-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.speed-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  background: white;
+  cursor: pointer;
+}
+
+.speed-select:hover {
+  border-color: #4a90e2;
+}
+
+/* Status indicator */
+.voice-status {
+  min-width: 70px;
+}
+
+.status-indicator {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-indicator.speaking {
+  background: #dcfce7;
+  color: #166534;
+  animation: pulse-status 1.5s infinite;
+}
+
+.status-indicator.paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-indicator.ready {
+  background: #f0f0f0;
+  color: #666;
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .voice-controls {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .voice-progress {
+    display: none;
+  }
+
+  .voice-speed {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .speed-label {
+    display: none;
+  }
+}

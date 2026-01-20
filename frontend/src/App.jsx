@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import CouncilChamber from './components/immersive/CouncilChamber';
+import VoiceController from './components/voice/VoiceController';
+import { useImmersiveStore } from './stores/immersiveStore';
 import { api } from './api';
 import './App.css';
 
@@ -9,6 +12,21 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Immersive mode state from Zustand
+  const {
+    isImmersiveMode,
+    setImmersiveMode,
+    voiceEnabled,
+    setVoiceEnabled,
+    setCurrentStage,
+    setProcessing,
+    setStage1Results,
+    setStage2Results,
+    setStage3Result,
+    resetForNewQuery,
+    setModelStatus,
+  } = useImmersiveStore();
 
   // Load conversations on mount
   useEffect(() => {
@@ -48,6 +66,7 @@ function App() {
         ...conversations,
       ]);
       setCurrentConversationId(newConv.id);
+      resetForNewQuery();
     } catch (error) {
       console.error('Failed to create conversation:', error);
     }
@@ -55,12 +74,16 @@ function App() {
 
   const handleSelectConversation = (id) => {
     setCurrentConversationId(id);
+    resetForNewQuery();
   };
 
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
+    resetForNewQuery();
+    setProcessing(true);
+
     try {
       // Optimistically add user message to UI
       const userMessage = { role: 'user', content };
@@ -93,6 +116,11 @@ function App() {
       await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
+            setCurrentStage('stage1');
+            // Set all models to thinking state
+            event.data?.models?.forEach((model) => {
+              setModelStatus(model, 'thinking');
+            });
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -102,6 +130,7 @@ function App() {
             break;
 
           case 'stage1_complete':
+            setStage1Results(event.data);
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -112,6 +141,7 @@ function App() {
             break;
 
           case 'stage2_start':
+            setCurrentStage('stage2');
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -121,6 +151,7 @@ function App() {
             break;
 
           case 'stage2_complete':
+            setStage2Results(event.data, event.metadata);
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -132,6 +163,7 @@ function App() {
             break;
 
           case 'stage3_start':
+            setCurrentStage('stage3');
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -141,6 +173,7 @@ function App() {
             break;
 
           case 'stage3_complete':
+            setStage3Result(event.data);
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
@@ -159,11 +192,13 @@ function App() {
             // Stream complete, reload conversations list
             loadConversations();
             setIsLoading(false);
+            setProcessing(false);
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
             setIsLoading(false);
+            setProcessing(false);
             break;
 
           default:
@@ -178,8 +213,17 @@ function App() {
         messages: prev.messages.slice(0, -2),
       }));
       setIsLoading(false);
+      setProcessing(false);
     }
   };
+
+  const handleToggleImmersive = useCallback(() => {
+    setImmersiveMode(!isImmersiveMode);
+  }, [isImmersiveMode, setImmersiveMode]);
+
+  const handleToggleVoice = useCallback(() => {
+    setVoiceEnabled(!voiceEnabled);
+  }, [voiceEnabled, setVoiceEnabled]);
 
   return (
     <div className="app">
@@ -189,11 +233,57 @@ function App() {
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
       />
-      <ChatInterface
-        conversation={currentConversation}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-      />
+      <div className="main-content">
+        {/* Mode Toggle Header */}
+        <div className="mode-toggle-header">
+          <div className="toggle-group">
+            <button
+              className={`mode-toggle-btn ${!isImmersiveMode ? 'active' : ''}`}
+              onClick={() => setImmersiveMode(false)}
+              title="Text Mode"
+            >
+              <span className="toggle-icon">📝</span>
+              <span className="toggle-label">Text</span>
+            </button>
+            <button
+              className={`mode-toggle-btn ${isImmersiveMode ? 'active' : ''}`}
+              onClick={() => setImmersiveMode(true)}
+              title="3D Council Chamber"
+            >
+              <span className="toggle-icon">🏛️</span>
+              <span className="toggle-label">3D Chamber</span>
+            </button>
+          </div>
+          <div className="toggle-group">
+            <button
+              className={`voice-toggle-btn ${voiceEnabled ? 'active' : ''}`}
+              onClick={handleToggleVoice}
+              title={voiceEnabled ? 'Disable Voice' : 'Enable Voice'}
+            >
+              <span className="toggle-icon">{voiceEnabled ? '🔊' : '🔇'}</span>
+              <span className="toggle-label">Voice</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        {isImmersiveMode ? (
+          <CouncilChamber
+            conversation={currentConversation}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        ) : (
+          <ChatInterface
+            conversation={currentConversation}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
+        )}
+
+        {/* Voice Controller (renders regardless of mode) */}
+        {voiceEnabled && <VoiceController />}
+      </div>
     </div>
   );
 }
