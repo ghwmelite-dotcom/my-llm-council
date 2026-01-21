@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f0f23"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2"/>
+      <stop offset="100%" style="stop-color:#357abd"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10a37f"/>
+      <stop offset="50%" style="stop-color:#4a90e2"/>
+      <stop offset="100%" style="stop-color:#d4a574"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#bg)" stroke="url(#glow)" stroke-width="2"/>
+
+  <!-- Inner diamond shape (◈ symbol) -->
+  <g transform="translate(32, 32)">
+    <!-- Outer diamond -->
+    <polygon points="0,-18 18,0 0,18 -18,0" fill="none" stroke="url(#accent)" stroke-width="2.5"/>
+
+    <!-- Inner diamond -->
+    <polygon points="0,-10 10,0 0,10 -10,0" fill="url(#accent)" opacity="0.9"/>
+
+    <!-- Center dot -->
+    <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+  </g>
+
+  <!-- Four small circles representing the 4 models -->
+  <circle cx="32" cy="8" r="3" fill="#10a37f"/> <!-- GPT - top -->
+  <circle cx="56" cy="32" r="3" fill="#4285f4"/> <!-- Gemini - right -->
+  <circle cx="32" cy="56" r="3" fill="#d4a574"/> <!-- Claude - bottom -->
+  <circle cx="8" cy="32" r="3" fill="#ff6b35"/> <!-- Grok - left -->
+</svg>
