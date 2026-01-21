@@ -1,69 +1,580 @@
+/* ============================================
+   LLM Council Landing Page
+   A masterful showcase of multi-model deliberation
+   ============================================ */
+
 .landing-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a14 0%, #12121f 50%, #0a0a14 100%);
+  color: #ffffff;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Ambient Background Effects */
+.ambient-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-1 {
+  width: 600px;
+  height: 600px;
+  background: #4a90e2;
+  top: -200px;
+  right: -200px;
+  animation: drift 20s ease-in-out infinite;
+}
+
+.glow-2 {
+  width: 500px;
+  height: 500px;
+  background: #d4a574;
+  bottom: -150px;
+  left: -150px;
+  animation: drift 25s ease-in-out infinite reverse;
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, 20px); }
+}
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================
+   Hero Section
+   ============================================ */
+.hero-section {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.landing-content {
-  text-align: center;
   padding: 2rem;
   position: relative;
   z-index: 10;
 }
 
-.landing-title {
-  font-size: 3rem;
+.hero-content {
+  text-align: center;
+  max-width: 800px;
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4a90e2;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
   font-weight: 300;
-  color: #ffffff;
   margin: 0 0 1rem 0;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
 }
 
 .title-icon {
   color: #4a90e2;
   margin-right: 0.5rem;
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
-.landing-tagline {
-  font-size: 1.1rem;
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; text-shadow: 0 0 20px rgba(74, 144, 226, 0.5); }
+  50% { opacity: 0.8; text-shadow: 0 0 40px rgba(74, 144, 226, 0.8); }
+}
+
+.hero-tagline {
+  font-size: 1.35rem;
   color: #8892a0;
-  margin: 0 0 2.5rem 0;
+  margin: 0 0 1.5rem 0;
   font-weight: 300;
+  letter-spacing: 0.02em;
 }
 
+.hero-description {
+  font-size: 1.1rem;
+  color: #6a7380;
+  margin: 0 0 2.5rem 0;
+  line-height: 1.7;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Enter Button */
 .enter-button {
-  background: #4a90e2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
   color: #ffffff;
   border: none;
-  padding: 0.875rem 2.5rem;
+  padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.enter-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .enter-button:hover {
-  background: #3a7bc8;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(74, 144, 226, 0.4);
 }
 
-.enter-button:active {
-  transform: translateY(0);
+.enter-button:hover::before {
+  opacity: 1;
 }
 
-/* Model Badges Container */
-.model-badges {
+.enter-button.large {
+  padding: 1.25rem 2.5rem;
+  font-size: 1.1rem;
+}
+
+.button-arrow {
+  transition: transform 0.3s ease;
+}
+
+.enter-button:hover .button-arrow {
+  transform: translateX(4px);
+}
+
+/* ============================================
+   Section Shared Styles
+   ============================================ */
+section {
+  padding: 6rem 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 400;
+  margin: 0 0 1rem 0;
+  letter-spacing: 0.04em;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #6a7380;
+  margin: 0;
+  font-weight: 300;
+}
+
+/* ============================================
+   Stages Section (The Deliberation Process)
+   ============================================ */
+.stages-section {
+  background: linear-gradient(180deg, transparent 0%, rgba(74, 144, 226, 0.03) 50%, transparent 100%);
+}
+
+.stages-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stage-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.4s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.stage-card::before {
+  content: '';
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-/* Individual Badge */
+.stage-card:hover,
+.stage-card.active {
+  border-color: rgba(74, 144, 226, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.stage-card:hover::before,
+.stage-card.active::before {
+  opacity: 1;
+}
+
+.stage-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a90e2;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stage-icon {
+  font-size: 2.5rem;
+  color: #4a90e2;
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.4s ease;
+}
+
+.stage-card:hover .stage-icon,
+.stage-card.active .stage-icon {
+  transform: scale(1.1);
+}
+
+.stage-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0 0 1rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.stage-description {
+  font-size: 0.95rem;
+  color: #8892a0;
+  margin: 0;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.stage-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4a90e2, transparent);
+  transition: width 0.4s ease;
+}
+
+.stage-card.active .stage-indicator {
+  width: 60%;
+}
+
+.stage-connector {
+  max-width: 800px;
+  margin: 3rem auto 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.connector-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #4a90e2, #10a37f);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.connector-progress.stage-0 { width: 16.67%; }
+.connector-progress.stage-1 { width: 50%; }
+.connector-progress.stage-2 { width: 100%; }
+
+/* ============================================
+   Models Section (The Council Members)
+   ============================================ */
+.models-section {
+  background: linear-gradient(180deg, transparent 0%, rgba(212, 165, 116, 0.03) 50%, transparent 100%);
+}
+
+.models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.model-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.model-card:hover {
+  border-color: var(--model-color);
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.model-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--model-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.model-card:hover .model-avatar {
+  box-shadow: 0 0 30px rgba(var(--model-color), 0.3);
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--model-color);
+  opacity: 0;
+  filter: blur(15px);
+  transition: opacity 0.3s ease;
+}
+
+.model-card:hover .avatar-glow {
+  opacity: 0.3;
+}
+
+.avatar-initial {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--model-color);
+  position: relative;
+  z-index: 1;
+}
+
+.model-name {
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  color: var(--model-color);
+}
+
+.model-role {
+  font-size: 0.9rem;
+  color: #6a7380;
+  margin: 0;
+}
+
+/* ============================================
+   Features Section
+   ============================================ */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  border-color: rgba(74, 144, 226, 0.3);
+  background: rgba(74, 144, 226, 0.05);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.feature-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.feature-description {
+  font-size: 0.9rem;
+  color: #6a7380;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================
+   Why Section
+   ============================================ */
+.why-section {
+  background: linear-gradient(180deg, transparent 0%, rgba(16, 163, 127, 0.03) 50%, transparent 100%);
+}
+
+.why-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.why-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 400;
+  margin: 0 0 3rem 0;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.why-points {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.why-point {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.why-point:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.why-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.why-point h4 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+}
+
+.why-point p {
+  font-size: 0.95rem;
+  color: #8892a0;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ============================================
+   CTA Section
+   ============================================ */
+.cta-section {
+  text-align: center;
+  padding: 8rem 2rem;
+}
+
+.cta-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.cta-title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 400;
+  margin: 0 0 1rem 0;
+  letter-spacing: 0.04em;
+}
+
+.cta-description {
+  font-size: 1.1rem;
+  color: #6a7380;
+  margin: 0 0 2.5rem 0;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.landing-footer {
+  text-align: center;
+  padding: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.landing-footer p {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin: 0;
+}
+
+/* ============================================
+   Model Badges (Floating)
+   ============================================ */
+.model-badges {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.6;
+}
+
 .model-badge {
   position: absolute;
   display: flex;
@@ -78,7 +589,7 @@
 }
 
 .badge-name {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--model-color);
   letter-spacing: 0.05em;
@@ -87,7 +598,6 @@
   opacity: 0.9;
 }
 
-/* Glow effect behind badge */
 .badge-glow {
   position: absolute;
   inset: -4px;
@@ -99,111 +609,113 @@
   animation: breathe 4s ease-in-out infinite;
 }
 
-/* Position badges in a circle */
+/* Position badges */
 .badge-0 {
-  top: 18%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 15%;
+  left: 10%;
   animation-delay: 0s;
 }
-.badge-0 .badge-glow {
-  animation-delay: 0s;
-}
+.badge-0 .badge-glow { animation-delay: 0s; }
 
 .badge-1 {
-  top: 50%;
-  right: 12%;
-  transform: translateY(-50%);
+  top: 25%;
+  right: 8%;
   animation-delay: 0.5s;
 }
-.badge-1 .badge-glow {
-  animation-delay: 1s;
-}
+.badge-1 .badge-glow { animation-delay: 1s; }
 
 .badge-2 {
-  bottom: 18%;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 30%;
+  right: 12%;
   animation-delay: 1s;
 }
-.badge-2 .badge-glow {
-  animation-delay: 2s;
-}
+.badge-2 .badge-glow { animation-delay: 2s; }
 
 .badge-3 {
-  top: 50%;
-  left: 12%;
-  transform: translateY(-50%);
+  bottom: 20%;
+  left: 8%;
   animation-delay: 1.5s;
 }
-.badge-3 .badge-glow {
-  animation-delay: 3s;
-}
+.badge-3 .badge-glow { animation-delay: 3s; }
 
-/* Breathing glow animation - sequential pulsing */
 @keyframes breathe {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  12.5%, 25% {
-    opacity: 0.4;
-    transform: scale(1.1);
-  }
-  37.5% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
+  0%, 100% { opacity: 0; transform: scale(0.8); }
+  12.5%, 25% { opacity: 0.4; transform: scale(1.1); }
+  37.5% { opacity: 0; transform: scale(0.8); }
 }
 
-/* Gentle floating motion */
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(-50%);
-  }
-  50% {
-    transform: translateY(-8px) translateX(-50%);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
-/* Adjust float for side badges */
-.badge-1,
-.badge-3 {
-  animation-name: float-side;
-}
-
-@keyframes float-side {
-  0%, 100% {
-    transform: translateY(-50%) translateX(0);
-  }
-  50% {
-    transform: translateY(calc(-50% - 8px)) translateX(0);
-  }
-}
-
-/* Responsive adjustments */
+/* ============================================
+   Responsive Design
+   ============================================ */
 @media (max-width: 768px) {
-  .model-badge {
-    padding: 0.4rem 0.8rem;
+  section {
+    padding: 4rem 1.5rem;
   }
 
-  .badge-name {
-    font-size: 0.75rem;
+  .hero-section {
+    min-height: auto;
+    padding-top: 6rem;
+    padding-bottom: 4rem;
   }
 
-  .badge-0 {
-    top: 12%;
+  .hero-description {
+    font-size: 1rem;
   }
 
-  .badge-2 {
-    bottom: 12%;
+  .stages-container {
+    gap: 1.5rem;
   }
 
-  .badge-1 {
-    right: 5%;
+  .stage-card {
+    padding: 2rem 1.5rem;
   }
 
-  .badge-3 {
-    left: 5%;
+  .model-badges {
+    display: none;
+  }
+
+  .why-point {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .why-icon {
+    margin: 0 auto;
+  }
+
+  .cta-section {
+    padding: 5rem 1.5rem;
+  }
+
+  .ambient-glow {
+    opacity: 0.1;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-tagline {
+    font-size: 1.1rem;
+  }
+
+  .enter-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .models-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
