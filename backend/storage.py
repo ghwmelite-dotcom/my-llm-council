@@ -56,7 +56,9 @@ def get_db():
 def get_conversations_collection():
     """Get the conversations collection (MongoDB only)."""
     db = get_db()
-    return db.conversations if db else None
+    if db is None:
+        return None
+    return db.conversations
 
 
 def create_conversation(conversation_id: str) -> Dict[str, Any]:
