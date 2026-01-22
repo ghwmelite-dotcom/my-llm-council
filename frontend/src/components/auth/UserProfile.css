@@ -11,7 +11,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -25,44 +25,76 @@
   }
 }
 
+/* Sign In Button - Beautiful dark theme styling */
 .sign-in-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 2px solid #4a90e2;
-  background: transparent;
+  gap: 8px;
+  padding: 8px 18px;
+  border: 1px solid rgba(74, 144, 226, 0.5);
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(74, 144, 226, 0.05) 100%);
   color: #4a90e2;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.sign-in-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .sign-in-btn:hover {
-  background: #4a90e2;
+  border-color: #4a90e2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+}
+
+.sign-in-btn:hover::before {
+  opacity: 1;
+}
+
+.sign-in-btn:hover .sign-in-icon,
+.sign-in-btn:hover span:last-child {
+  position: relative;
+  z-index: 1;
   color: white;
 }
 
-.sign-in-icon {
-  font-size: 16px;
+.sign-in-btn:active {
+  transform: translateY(0);
 }
 
+.sign-in-icon {
+  font-size: 15px;
+  transition: color 0.2s ease;
+}
+
+/* User Profile Button - Logged in state */
 .user-profile-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 24px;
+  gap: 10px;
+  padding: 5px 14px 5px 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .user-profile-btn:hover {
-  background: #e5e7eb;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
 }
 
 .user-avatar {
@@ -76,13 +108,15 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .user-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: #374151;
-  max-width: 120px;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -90,46 +124,50 @@
 
 .dropdown-arrow {
   font-size: 10px;
-  color: #6b7280;
-  transition: transform 0.2s;
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+  margin-left: -2px;
 }
 
 .dropdown-arrow.open {
   transform: rotate(180deg);
 }
 
+/* User Dropdown Menu */
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
   width: 280px;
-  background: white;
+  background: linear-gradient(180deg, #252542 0%, #1a1a2e 100%);
   border-radius: 16px;
   box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-  animation: dropdownSlide 0.2s ease-out;
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 1000;
+  animation: dropdownSlide 0.25s ease-out;
   overflow: hidden;
 }
 
 @keyframes dropdownSlide {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .dropdown-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #f3f4f6 100%);
+  gap: 14px;
+  padding: 18px 16px;
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dropdown-avatar {
@@ -144,19 +182,20 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .dropdown-user-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   overflow: hidden;
 }
 
 .dropdown-display-name {
   font-size: 15px;
   font-weight: 600;
-  color: #1f2937;
+  color: rgba(255, 255, 255, 0.95);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -164,7 +203,7 @@
 
 .dropdown-username {
   font-size: 13px;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.5);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -172,36 +211,37 @@
 
 .dropdown-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.08) 50%, transparent 100%);
   margin: 0;
 }
 
 .dropdown-stats {
   display: flex;
-  padding: 12px 16px;
-  gap: 24px;
+  padding: 14px 16px;
+  gap: 20px;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 3px;
 }
 
 .stat-icon {
   font-size: 14px;
+  opacity: 0.8;
 }
 
 .stat-value {
   font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-label {
-  font-size: 11px;
-  color: #9ca3af;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -209,38 +249,70 @@
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   padding: 12px 16px;
   border: none;
   background: transparent;
   cursor: pointer;
   font-size: 14px;
-  color: #374151;
+  color: rgba(255, 255, 255, 0.8);
   text-align: left;
-  transition: background 0.15s;
+  transition: all 0.15s ease;
 }
 
 .dropdown-item:hover {
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 1);
 }
 
 .dropdown-item.logout {
-  color: #dc2626;
+  color: #f87171;
 }
 
 .dropdown-item.logout:hover {
-  background: #fef2f2;
+  background: rgba(248, 113, 113, 0.1);
+  color: #ef4444;
 }
 
 .item-icon {
   font-size: 16px;
   width: 20px;
   text-align: center;
+  opacity: 0.8;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* ============================================
+   Responsive Styles
+   ============================================ */
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .sign-in-btn {
+    padding: 9px 20px;
+    font-size: 14px;
+  }
+
+  .user-name {
+    max-width: 120px;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 991px) and (min-width: 768px) {
+  .sign-in-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
+
+  .sign-in-btn span:last-child {
+    display: none;
+  }
+
+  .sign-in-icon {
+    font-size: 16px;
+  }
+
   .user-name {
     display: none;
   }
@@ -248,12 +320,44 @@
   .user-profile-btn {
     padding: 4px;
     background: transparent;
+    border: none;
+  }
+
+  .dropdown-arrow {
+    display: none;
+  }
+}
+
+/* Tablet and mobile */
+@media (max-width: 767px) {
+  .sign-in-btn {
+    padding: 7px 12px;
+    border-radius: 20px;
+    gap: 6px;
+  }
+
+  .sign-in-btn span:last-child {
+    display: none;
+  }
+
+  .sign-in-icon {
+    font-size: 17px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .user-profile-btn {
+    padding: 3px;
+    background: transparent;
+    border: none;
   }
 
   .user-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
   }
 
   .dropdown-arrow {
@@ -261,8 +365,39 @@
   }
 
   .user-dropdown {
-    right: -8px;
-    width: calc(100vw - 32px);
+    right: -4px;
+    width: calc(100vw - 24px);
     max-width: 300px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 399px) {
+  .sign-in-btn {
+    padding: 6px 10px;
+  }
+
+  .sign-in-icon {
+    font-size: 16px;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .user-dropdown {
+    width: calc(100vw - 16px);
+  }
+
+  .dropdown-header {
+    padding: 14px 12px;
+  }
+
+  .dropdown-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
   }
 }

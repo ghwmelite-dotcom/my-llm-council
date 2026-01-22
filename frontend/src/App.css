@@ -19,6 +19,7 @@
   --accent-blue: #4a90e2;
   --accent-blue-dim: #3a7bc8;
   --accent-green: #22c55e;
+  --accent-purple: #8b5cf6;
 
   /* Model colors */
   --color-gpt: #10a37f;
@@ -29,9 +30,11 @@
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
 
   --shadow-glow: 0 0 20px rgba(74, 144, 226, 0.15);
   --transition: 0.2s ease;
+  --transition-fast: 0.15s ease;
 }
 
 .app {
@@ -55,83 +58,211 @@
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
-/* Mode Toggle Header */
+/* ============================================
+   Mode Toggle Header - Masterful Responsive Design
+   ============================================ */
+
 .mode-toggle-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  background: var(--bg-secondary);
+  gap: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, rgba(26, 26, 46, 0.95) 100%);
   border-bottom: 1px solid var(--border-subtle);
   z-index: 100;
+  min-height: 56px;
+  backdrop-filter: blur(10px);
 }
 
+/* Left section - Mode toggles */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Center section - Feature buttons (grows to fill space) */
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Right section - User profile */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Toggle Group Styling */
 .toggle-group {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 2px;
   background: var(--bg-card);
-  padding: 4px;
-  border-radius: var(--radius-md);
+  padding: 3px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
+  transition: all var(--transition);
 }
 
+.toggle-group:hover {
+  border-color: var(--border-medium);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Base button styling */
 .mode-toggle-btn,
 .voice-toggle-btn,
 .analytics-btn,
 .config-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border: none;
   background: transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-toggle-btn::before,
+.voice-toggle-btn::before,
+.analytics-btn::before,
+.config-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .mode-toggle-btn:hover,
 .voice-toggle-btn:hover,
 .analytics-btn:hover,
 .config-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
+.mode-toggle-btn:hover::before,
+.voice-toggle-btn:hover::before,
+.analytics-btn:hover::before,
+.config-btn:hover::before {
+  opacity: 1;
+}
+
+.mode-toggle-btn:active,
+.voice-toggle-btn:active,
+.analytics-btn:active,
+.config-btn:active {
+  transform: translateY(0);
+}
+
+/* Active states */
 .mode-toggle-btn.active {
-  background: var(--accent-blue);
+  background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dim) 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+  box-shadow:
+    0 2px 8px rgba(74, 144, 226, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .voice-toggle-btn.active {
-  background: var(--accent-green);
+  background: linear-gradient(135deg, var(--accent-green) 0%, #1ea550 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+  box-shadow:
+    0 2px 8px rgba(34, 197, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.config-btn.active {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%);
+  color: white;
+  box-shadow:
+    0 2px 8px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Icon styling */
 .toggle-icon {
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .toggle-label {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
-/* User profile group */
+/* User profile group - special styling */
 .toggle-group.user-group {
   background: transparent;
   border: none;
   padding: 0;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* ============================================
+   Responsive Breakpoints
+   ============================================ */
+
+/* Large screens (1200px+) - Full layout */
+@media (min-width: 1200px) {
+  .mode-toggle-header {
+    padding: 10px 24px;
+    gap: 16px;
+  }
+
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    padding: 8px 16px;
+  }
+}
+
+/* Medium-large screens (992px - 1199px) - Slightly compact */
+@media (max-width: 1199px) and (min-width: 992px) {
   .toggle-label {
+    font-size: 11px;
+  }
+
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    padding: 7px 12px;
+  }
+}
+
+/* Medium screens (768px - 991px) - Hide some labels */
+@media (max-width: 991px) and (min-width: 768px) {
+  .mode-toggle-header {
+    padding: 8px 16px;
+    gap: 8px;
+  }
+
+  /* Keep labels only on primary toggles */
+  .analytics-btn .toggle-label,
+  .config-btn .toggle-label {
     display: none;
   }
 
@@ -140,16 +271,172 @@
     padding: 8px 12px;
   }
 
-  .mode-toggle-header {
-    padding-left: 60px; /* Make room for hamburger menu */
-    flex-wrap: wrap;
-    gap: 8px;
+  .analytics-btn,
+  .config-btn {
+    padding: 8px 10px;
   }
 
+  .toggle-icon {
+    font-size: 16px;
+  }
+}
+
+/* Tablet screens (576px - 767px) - Icons only, compact layout */
+@media (max-width: 767px) and (min-width: 576px) {
+  .mode-toggle-header {
+    padding: 8px 12px;
+    padding-left: 56px; /* Room for hamburger */
+    gap: 6px;
+  }
+
+  .toggle-label {
+    display: none;
+  }
+
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    padding: 8px 10px;
+    min-width: 40px;
+  }
+
+  .toggle-icon {
+    font-size: 17px;
+  }
+
+  .toggle-group {
+    padding: 2px;
+    gap: 1px;
+  }
+}
+
+/* Mobile screens (< 576px) - Minimal, scrollable */
+@media (max-width: 575px) {
+  .mode-toggle-header {
+    padding: 8px 10px;
+    padding-left: 52px; /* Room for hamburger */
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mode-toggle-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toggle-label {
+    display: none;
+  }
+
+  .toggle-group {
+    flex-shrink: 0;
+    padding: 2px;
+    gap: 1px;
+  }
+
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    padding: 7px 9px;
+    min-width: 36px;
+  }
+
+  .toggle-icon {
+    font-size: 16px;
+  }
+
+  /* User group stays at the end */
   .toggle-group.user-group {
-    order: -1;
-    width: 100%;
-    justify-content: flex-end;
-    margin-bottom: 4px;
+    position: sticky;
+    right: 0;
+    background: linear-gradient(90deg, transparent 0%, var(--bg-secondary) 20%);
+    padding-left: 16px;
+    margin-left: auto;
+  }
+}
+
+/* Extra small screens (< 400px) - Ultra compact */
+@media (max-width: 399px) {
+  .mode-toggle-header {
+    padding: 6px 8px;
+    padding-left: 48px;
+    min-height: 48px;
+    gap: 4px;
+  }
+
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    padding: 6px 8px;
+    min-width: 32px;
+  }
+
+  .toggle-icon {
+    font-size: 15px;
+  }
+
+  .toggle-group {
+    border-radius: var(--radius-md);
+  }
+}
+
+/* ============================================
+   Tooltip enhancement for icon-only mode
+   ============================================ */
+
+@media (max-width: 767px) {
+  .mode-toggle-btn,
+  .voice-toggle-btn,
+  .analytics-btn,
+  .config-btn {
+    position: relative;
+  }
+
+  .mode-toggle-btn[title]:hover::after,
+  .voice-toggle-btn[title]:hover::after,
+  .analytics-btn[title]:hover::after,
+  .config-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 1000;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    animation: tooltipFade 0.2s ease;
+  }
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================
+   Print styles
+   ============================================ */
+
+@media print {
+  .mode-toggle-header {
+    display: none;
   }
 }
