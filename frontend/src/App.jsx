@@ -4,7 +4,9 @@ import ChatInterface from './components/ChatInterface';
 import CouncilChamber from './components/immersive/CouncilChamber';
 import VoiceController from './components/voice/VoiceController';
 import LandingPage from './components/landing/LandingPage';
+import Toast from './components/Toast';
 import { useImmersiveStore } from './stores/immersiveStore';
+import { useToastStore } from './stores/toastStore';
 import { api } from './api';
 import './App.css';
 
@@ -25,6 +27,9 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(() => getStoredValue('llm-council-conversation-id', null));
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Processing status for new features (routing, caching, verification)
+  const [processingStatus, setProcessingStatus] = useState(null);
 
   // Persist showLanding to localStorage
   useEffect(() => {
@@ -51,6 +56,9 @@ function App() {
     setModelStatus,
   } = useImmersiveStore();
 
+  // Toast notifications
+  const toast = useToastStore();
+
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
@@ -69,6 +77,7 @@ function App() {
       setConversations(convs);
     } catch (error) {
       console.error('Failed to load conversations:', error);
+      toast.error('Failed to load conversations');
     }
   };
 
@@ -78,6 +87,7 @@ function App() {
       setCurrentConversation(conv);
     } catch (error) {
       console.error('Failed to load conversation:', error);
+      toast.error('Failed to load conversation');
     }
   };
 
@@ -90,8 +100,10 @@ function App() {
       ]);
       setCurrentConversationId(newConv.id);
       resetForNewQuery();
+      toast.success('New conversation started');
     } catch (error) {
       console.error('Failed to create conversation:', error);
+      toast.error('Failed to create conversation');
     }
   };
 
@@ -100,12 +112,30 @@ function App() {
     resetForNewQuery();
   };
 
+  const handleDeleteConversation = async (id) => {
+    try {
+      await api.deleteConversation(id);
+      // Remove from local state
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      // If we deleted the current conversation, clear it
+      if (id === currentConversationId) {
+        setCurrentConversationId(null);
+        setCurrentConversation(null);
+      }
+      toast.success('Conversation deleted');
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      toast.error('Failed to delete conversation');
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
     resetForNewQuery();
     setProcessing(true);
+    setProcessingStatus({ isProcessing: true });
 
     try {
       // Optimistically add user message to UI
@@ -138,6 +168,46 @@ function App() {
       // Send message with streaming
       await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
         switch (eventType) {
+          case 'routing_decision':
+            // Smart routing determined the query complexity
+            setProcessingStatus((prev) => ({
+              ...prev,
+              routing: event.data,
+              isProcessing: true,
+            }));
+            break;
+
+          case 'cache_hit':
+            // Response served from semantic cache
+            setProcessingStatus((prev) => ({
+              ...prev,
+              cacheHit: event.data,
+              isProcessing: false,
+            }));
+            toast.success('Cached response found!');
+            break;
+
+          case 'stage1_5_start':
+            // Factual verification starting
+            setProcessingStatus((prev) => ({
+              ...prev,
+              verification: { running: true },
+            }));
+            break;
+
+          case 'stage1_5_complete':
+            // Factual verification complete
+            setProcessingStatus((prev) => ({
+              ...prev,
+              verification: event.data?.skipped
+                ? null
+                : { ...event.data, running: false },
+            }));
+            if (event.data?.contradiction_count > 0) {
+              toast.warning(`${event.data.contradiction_count} contradiction(s) detected between models`);
+            }
+            break;
+
           case 'stage1_start':
             setCurrentStage('stage1');
             // Set all models to thinking state
@@ -216,10 +286,15 @@ function App() {
             loadConversations();
             setIsLoading(false);
             setProcessing(false);
+            // Keep status visible for a moment, then clear
+            setTimeout(() => {
+              setProcessingStatus((prev) => prev ? { ...prev, isProcessing: false } : null);
+            }, 500);
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
+            toast.error(event.message || 'An error occurred during processing');
             setIsLoading(false);
             setProcessing(false);
             break;
@@ -230,6 +305,7 @@ function App() {
       });
     } catch (error) {
       console.error('Failed to send message:', error);
+      toast.error('Failed to send message. Please try again.');
       // Remove optimistic messages on error
       setCurrentConversation((prev) => ({
         ...prev,
@@ -264,6 +340,7 @@ function App() {
         currentConversationId={currentConversationId}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onDeleteConversation={handleDeleteConversation}
       />
       <div className="main-content">
         {/* Mode Toggle Header */}
@@ -310,12 +387,16 @@ function App() {
             conversation={currentConversation}
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
+            processingStatus={processingStatus}
           />
         )}
 
         {/* Voice Controller (renders regardless of mode) */}
         {voiceEnabled && <VoiceController />}
       </div>
+
+      {/* Toast Notifications */}
+      <Toast />
     </div>
   );
 }

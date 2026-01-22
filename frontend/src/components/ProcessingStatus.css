@@ -1,0 +1,168 @@
+.processing-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.status-icon {
+  font-size: 14px;
+}
+
+.status-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.status-text {
+  color: inherit;
+}
+
+.status-detail {
+  font-size: 11px;
+  opacity: 0.8;
+  padding-left: 4px;
+  border-left: 1px solid currentColor;
+  margin-left: 4px;
+}
+
+/* Routing Tiers */
+.status-badge.routing {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.status-badge.routing.tier-1 {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #a5d6a7;
+}
+
+.status-badge.routing.tier-2 {
+  background: #fff3e0;
+  color: #e65100;
+  border-color: #ffcc80;
+}
+
+.status-badge.routing.tier-3 {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border-color: #ce93d8;
+}
+
+/* Cache Hit */
+.status-badge.cache-hit {
+  background: #e0f7fa;
+  color: #00838f;
+  border: 1px solid #80deea;
+}
+
+/* Verification */
+.status-badge.verification {
+  border: 1px solid;
+}
+
+.status-badge.verification.severity-low {
+  background: #fffde7;
+  color: #f9a825;
+  border-color: #fff59d;
+}
+
+.status-badge.verification.severity-medium {
+  background: #fff3e0;
+  color: #ef6c00;
+  border-color: #ffcc80;
+}
+
+.status-badge.verification.severity-high {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ef9a9a;
+}
+
+.status-badge.verification.severity-critical {
+  background: #fce4ec;
+  color: #ad1457;
+  border-color: #f48fb1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.status-badge.verification-running {
+  background: #e8eaf6;
+  color: #3949ab;
+  border: 1px solid #9fa8da;
+}
+
+.status-badge.processing {
+  background: #eceff1;
+  color: #546e7a;
+  border: 1px solid #b0bec5;
+}
+
+/* Hover effects */
+.status-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .processing-status {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-color: #404040;
+  }
+
+  .status-badge {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .status-badge.routing {
+    background: rgba(33, 150, 243, 0.2);
+    color: #90caf9;
+  }
+
+  .status-badge.routing.tier-1 {
+    background: rgba(76, 175, 80, 0.2);
+    color: #a5d6a7;
+  }
+
+  .status-badge.routing.tier-2 {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ffcc80;
+  }
+
+  .status-badge.routing.tier-3 {
+    background: rgba(156, 39, 176, 0.2);
+    color: #ce93d8;
+  }
+
+  .status-badge.cache-hit {
+    background: rgba(0, 188, 212, 0.2);
+    color: #80deea;
+  }
+}

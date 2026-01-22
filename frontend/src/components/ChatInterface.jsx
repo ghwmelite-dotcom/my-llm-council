@@ -3,12 +3,15 @@ import ReactMarkdown from 'react-markdown';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import StageSkeleton from './StageSkeleton';
+import ProcessingStatus from './ProcessingStatus';
 import './ChatInterface.css';
 
 export default function ChatInterface({
   conversation,
   onSendMessage,
   isLoading,
+  processingStatus,
 }) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -73,20 +76,14 @@ export default function ChatInterface({
                   <div className="message-label">LLM Council</div>
 
                   {/* Stage 1 */}
-                  {msg.loading?.stage1 && (
-                    <div className="stage-loading">
-                      <div className="spinner"></div>
-                      <span>Running Stage 1: Collecting individual responses...</span>
-                    </div>
+                  {msg.loading?.stage1 && !msg.stage1 && (
+                    <StageSkeleton stage={1} />
                   )}
                   {msg.stage1 && <Stage1 responses={msg.stage1} />}
 
                   {/* Stage 2 */}
-                  {msg.loading?.stage2 && (
-                    <div className="stage-loading">
-                      <div className="spinner"></div>
-                      <span>Running Stage 2: Peer rankings...</span>
-                    </div>
+                  {msg.loading?.stage2 && !msg.stage2 && (
+                    <StageSkeleton stage={2} />
                   )}
                   {msg.stage2 && (
                     <Stage2
@@ -97,11 +94,8 @@ export default function ChatInterface({
                   )}
 
                   {/* Stage 3 */}
-                  {msg.loading?.stage3 && (
-                    <div className="stage-loading">
-                      <div className="spinner"></div>
-                      <span>Running Stage 3: Final synthesis...</span>
-                    </div>
+                  {msg.loading?.stage3 && !msg.stage3 && (
+                    <StageSkeleton stage={3} />
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
                 </div>
@@ -110,7 +104,12 @@ export default function ChatInterface({
           ))
         )}
 
-        {isLoading && (
+        {/* Processing Status Bar */}
+        {isLoading && processingStatus && (
+          <ProcessingStatus status={processingStatus} />
+        )}
+
+        {isLoading && !processingStatus?.cacheHit && (
           <div className="loading-indicator">
             <div className="spinner"></div>
             <span>Consulting the council...</span>
