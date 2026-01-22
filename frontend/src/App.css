@@ -121,6 +121,14 @@
   font-size: 13px;
 }
 
+/* User profile group */
+.toggle-group.user-group {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-left: auto;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .toggle-label {
@@ -134,5 +142,14 @@
 
   .mode-toggle-header {
     padding-left: 60px; /* Make room for hamburger menu */
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .toggle-group.user-group {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+    margin-bottom: 4px;
   }
 }

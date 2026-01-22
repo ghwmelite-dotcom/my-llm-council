@@ -61,12 +61,13 @@ def get_conversations_collection():
     return db.conversations
 
 
-def create_conversation(conversation_id: str) -> Dict[str, Any]:
+def create_conversation(conversation_id: str, user_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Create a new conversation.
 
     Args:
         conversation_id: Unique identifier for the conversation
+        user_id: Optional user ID to associate with conversation
 
     Returns:
         New conversation dict
@@ -75,7 +76,8 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
         "id": conversation_id,
         "created_at": datetime.utcnow().isoformat(),
         "title": "New Conversation",
-        "messages": []
+        "messages": [],
+        "user_id": user_id
     }
 
     collection = get_conversations_collection()
@@ -143,9 +145,12 @@ def save_conversation(conversation: Dict[str, Any]):
             json.dump(conversation, f, indent=2)
 
 
-def list_conversations() -> List[Dict[str, Any]]:
+def list_conversations(user_id: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     List all conversations (metadata only).
+
+    Args:
+        user_id: Optional user ID to filter conversations. If None, returns all conversations.
 
     Returns:
         List of conversation metadata dicts
@@ -155,9 +160,13 @@ def list_conversations() -> List[Dict[str, Any]]:
     collection = get_conversations_collection()
     if collection is not None:
         # MongoDB storage
+        query = {}
+        if user_id is not None:
+            query["user_id"] = user_id
+
         cursor = collection.find(
-            {},
-            {"_id": 0, "id": 1, "created_at": 1, "title": 1, "messages": 1}
+            query,
+            {"_id": 0, "id": 1, "created_at": 1, "title": 1, "messages": 1, "user_id": 1}
         )
 
         for doc in cursor:
@@ -165,7 +174,8 @@ def list_conversations() -> List[Dict[str, Any]]:
                 "id": doc["id"],
                 "created_at": doc["created_at"],
                 "title": doc.get("title", "New Conversation"),
-                "message_count": len(doc.get("messages", []))
+                "message_count": len(doc.get("messages", [])),
+                "user_id": doc.get("user_id")
             })
     else:
         # JSON file storage
@@ -174,11 +184,15 @@ def list_conversations() -> List[Dict[str, Any]]:
             try:
                 with open(path, 'r') as f:
                     doc = json.load(f)
+                    # Filter by user_id if specified
+                    if user_id is not None and doc.get("user_id") != user_id:
+                        continue
                     conversations.append({
                         "id": doc["id"],
                         "created_at": doc["created_at"],
                         "title": doc.get("title", "New Conversation"),
-                        "message_count": len(doc.get("messages", []))
+                        "message_count": len(doc.get("messages", [])),
+                        "user_id": doc.get("user_id")
                     })
             except (json.JSONDecodeError, KeyError):
                 continue

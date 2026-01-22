@@ -34,6 +34,10 @@ from .collaboration import get_connection_manager, get_room_manager
 from .plugins import get_plugin_registry, PluginConfig
 from .plugins.builtin import BUILTIN_PLUGINS, list_builtin_plugins
 from .routing.ml import get_routing_model, collect_training_sample, train_model, get_training_store
+from .auth import (
+    get_user_store, create_token, verify_token, get_current_user,
+    UserCreate, UserLogin, UserResponse, UserUpdate, OnboardingUpdate
+)
 
 # Tier 4 imports
 from .predictions import (
@@ -77,7 +81,7 @@ app.include_router(gateway_router)
 
 class CreateConversationRequest(BaseModel):
     """Request to create a new conversation."""
-    pass
+    user_id: Optional[str] = None
 
 
 class SendMessageRequest(BaseModel):
@@ -159,16 +163,16 @@ async def update_config(request: UpdateConfigRequest):
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
-async def list_conversations():
-    """List all conversations (metadata only)."""
-    return storage.list_conversations()
+async def list_conversations(user_id: Optional[str] = None):
+    """List all conversations (metadata only). Optionally filter by user_id."""
+    return storage.list_conversations(user_id=user_id)
 
 
 @app.post("/api/conversations", response_model=Conversation)
 async def create_conversation(request: CreateConversationRequest):
     """Create a new conversation."""
     conversation_id = str(uuid.uuid4())
-    conversation = storage.create_conversation(conversation_id)
+    conversation = storage.create_conversation(conversation_id, user_id=request.user_id)
     return conversation
 
 
@@ -1280,6 +1284,194 @@ async def get_training_data(limit: int = 50):
         ],
         "total": len(store.samples),
     }
+
+
+# =============================================================================
+# Auth API Endpoints
+# =============================================================================
+
+@app.post("/api/auth/register")
+async def register_user(request: UserCreate):
+    """Register a new user."""
+    store = get_user_store()
+
+    # Check if username already exists
+    if store.username_exists(request.username):
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    # Create user
+    user = store.create_user(
+        username=request.username,
+        password=request.password,
+        display_name=request.display_name,
+        email=request.email
+    )
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Failed to create user")
+
+    # Create token
+    token = create_token(user.id, user.username)
+
+    return {
+        "token": token,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "created_at": user.created_at,
+            "avatar_color": user.avatar_color,
+            "onboarding_complete": user.onboarding_complete,
+            "conversation_count": len(user.conversation_ids),
+        }
+    }
+
+
+@app.post("/api/auth/login")
+async def login_user(request: UserLogin):
+    """Login a user."""
+    store = get_user_store()
+
+    user = store.authenticate(request.username, request.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    # Create token
+    token = create_token(user.id, user.username)
+
+    return {
+        "token": token,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+            "created_at": user.created_at,
+            "last_login": user.last_login,
+            "email": user.email,
+            "avatar_color": user.avatar_color,
+            "onboarding_complete": user.onboarding_complete,
+            "preferences": user.preferences,
+            "conversation_count": len(user.conversation_ids),
+        }
+    }
+
+
+@app.get("/api/auth/me")
+async def get_current_user_info(authorization: Optional[str] = Header(None)):
+    """Get current user info from token."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # Extract token
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = parts[1]
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    # Get user from store
+    store = get_user_store()
+    user = store.get_user_by_id(payload.get('sub'))
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "display_name": user.display_name,
+        "created_at": user.created_at,
+        "last_login": user.last_login,
+        "email": user.email,
+        "avatar_color": user.avatar_color,
+        "onboarding_complete": user.onboarding_complete,
+        "preferences": user.preferences,
+        "conversation_count": len(user.conversation_ids),
+    }
+
+
+@app.put("/api/auth/profile")
+async def update_user_profile(request: UserUpdate, authorization: Optional[str] = Header(None)):
+    """Update current user's profile."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # Extract token
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = parts[1]
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    store = get_user_store()
+
+    updates = {}
+    if request.display_name is not None:
+        updates['display_name'] = request.display_name
+    if request.email is not None:
+        updates['email'] = request.email
+    if request.avatar_color is not None:
+        updates['avatar_color'] = request.avatar_color
+    if request.preferences is not None:
+        updates['preferences'] = request.preferences
+
+    user = store.update_user(payload.get('sub'), **updates)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "display_name": user.display_name,
+        "email": user.email,
+        "avatar_color": user.avatar_color,
+        "preferences": user.preferences,
+    }
+
+
+@app.put("/api/auth/onboarding")
+async def update_onboarding_status(request: OnboardingUpdate, authorization: Optional[str] = Header(None)):
+    """Update user's onboarding status."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # Extract token
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = parts[1]
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    store = get_user_store()
+    user = store.update_user(payload.get('sub'), onboarding_complete=request.complete)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "onboarding_complete": user.onboarding_complete,
+    }
+
+
+@app.get("/api/auth/check-username/{username}")
+async def check_username_available(username: str):
+    """Check if a username is available."""
+    store = get_user_store()
+    available = not store.username_exists(username)
+    return {"username": username, "available": available}
 
 
 @app.post("/api/conversations/{conversation_id}/message/stream/v2")

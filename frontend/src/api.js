@@ -7,9 +7,14 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 export const api = {
   /**
    * List all conversations.
+   * @param {string} userId - Optional user ID to filter conversations
    */
-  async listConversations() {
-    const response = await fetch(`${API_BASE}/api/conversations`);
+  async listConversations(userId = null) {
+    const url = new URL(`${API_BASE}/api/conversations`);
+    if (userId) {
+      url.searchParams.set('user_id', userId);
+    }
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error('Failed to list conversations');
     }
@@ -18,14 +23,15 @@ export const api = {
 
   /**
    * Create a new conversation.
+   * @param {string} userId - Optional user ID to associate with conversation
    */
-  async createConversation() {
+  async createConversation(userId = null) {
     const response = await fetch(`${API_BASE}/api/conversations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ user_id: userId }),
     });
     if (!response.ok) {
       throw new Error('Failed to create conversation');

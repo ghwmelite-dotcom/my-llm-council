@@ -10,6 +10,10 @@ import CouncilBuilder from './components/CouncilBuilder';
 import MemoryManager from './components/MemoryManager';
 import CollaborationPanel from './components/CollaborationPanel';
 import PluginManager from './components/PluginManager';
+import AuthModal from './components/auth/AuthModal';
+import UserProfile from './components/auth/UserProfile';
+import OnboardingTour from './components/onboarding/OnboardingTour';
+import { useUser } from './contexts/UserContext';
 import { useImmersiveStore } from './stores/immersiveStore';
 import { useToastStore } from './stores/toastStore';
 import { api } from './api';
@@ -51,6 +55,12 @@ function App() {
   // Plugin manager state
   const [showPluginManager, setShowPluginManager] = useState(false);
 
+  // Auth modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // User context
+  const { user, isAuthenticated, login } = useUser();
+
   // Persist showLanding to localStorage
   useEffect(() => {
     localStorage.setItem('llm-council-show-landing', JSON.stringify(showLanding));
@@ -79,10 +89,10 @@ function App() {
   // Toast notifications
   const toast = useToastStore();
 
-  // Load conversations on mount
+  // Load conversations on mount and when user changes
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [user?.id]);
 
   // Load conversation details when selected
   useEffect(() => {
@@ -93,7 +103,8 @@ function App() {
 
   const loadConversations = async () => {
     try {
-      const convs = await api.listConversations();
+      // If user is logged in, load only their conversations
+      const convs = await api.listConversations(user?.id || null);
       setConversations(convs);
     } catch (error) {
       console.error('Failed to load conversations:', error);
@@ -113,9 +124,10 @@ function App() {
 
   const handleNewConversation = async () => {
     try {
-      const newConv = await api.createConversation();
+      // Create conversation with user_id if logged in
+      const newConv = await api.createConversation(user?.id || null);
       setConversations([
-        { id: newConv.id, created_at: newConv.created_at, message_count: 0 },
+        { id: newConv.id, created_at: newConv.created_at, message_count: 0, user_id: user?.id },
         ...conversations,
       ]);
       setCurrentConversationId(newConv.id);
@@ -465,6 +477,9 @@ function App() {
               <span className="toggle-label">Plugins</span>
             </button>
           </div>
+          <div className="toggle-group user-group">
+            <UserProfile onShowAuth={() => setShowAuthModal(true)} />
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -544,6 +559,19 @@ function App() {
         isOpen={showPluginManager}
         onClose={() => setShowPluginManager(false)}
       />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={(token, userData) => {
+          login(token, userData);
+          toast.success(`Welcome, ${userData.display_name || userData.username}!`);
+        }}
+      />
+
+      {/* Onboarding Tour - shows for new authenticated users */}
+      {isAuthenticated && <OnboardingTour />}
     </div>
   );
 }
