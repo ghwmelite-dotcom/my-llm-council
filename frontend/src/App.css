@@ -76,7 +76,9 @@
 }
 
 .mode-toggle-btn,
-.voice-toggle-btn {
+.voice-toggle-btn,
+.analytics-btn,
+.config-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -92,7 +94,9 @@
 }
 
 .mode-toggle-btn:hover,
-.voice-toggle-btn:hover {
+.voice-toggle-btn:hover,
+.analytics-btn:hover,
+.config-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }

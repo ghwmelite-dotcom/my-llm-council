@@ -1,0 +1,253 @@
+.collab-panel {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  width: 280px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.collab-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-tertiary);
+}
+
+.collab-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.collab-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+}
+
+.status-dot.connected {
+  background: #22c55e;
+}
+
+.status-dot.disconnected {
+  background: #ef4444;
+}
+
+.collab-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Users Section */
+.collab-users {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.settings-btn:hover {
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+
+.empty-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.user-name {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.typing-indicator {
+  font-size: 11px;
+  color: var(--accent-blue);
+  font-style: italic;
+  margin-left: auto;
+}
+
+/* Invite Section */
+.collab-invite {
+  padding: 12px 16px;
+}
+
+.invite-code {
+  display: flex;
+  gap: 8px;
+}
+
+.invite-code input {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.invite-code button {
+  padding: 8px 12px;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.invite-code button:hover {
+  background: var(--accent-blue-dim);
+}
+
+.create-room-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.create-room-btn:hover {
+  background: var(--accent-blue-dim);
+}
+
+/* Settings Section */
+.collab-settings {
+  padding: 16px;
+}
+
+.collab-settings h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.collab-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.collab-settings input {
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.collab-settings input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.collab-settings button {
+  width: 100%;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.collab-settings button:hover {
+  border-color: var(--border-medium);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .collab-panel {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    top: 70px;
+  }
+}

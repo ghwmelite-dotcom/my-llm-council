@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -6,8 +6,10 @@ export default function Sidebar({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
+  onDeleteConversation,
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const handleSelectConversation = (id) => {
     onSelectConversation(id);
@@ -17,6 +19,22 @@ export default function Sidebar({
   const handleNewConversation = () => {
     onNewConversation();
     setIsOpen(false);
+  };
+
+  const handleDeleteClick = (e, id) => {
+    e.stopPropagation();
+    setDeleteConfirm(id);
+  };
+
+  const handleConfirmDelete = (e, id) => {
+    e.stopPropagation();
+    onDeleteConversation(id);
+    setDeleteConfirm(null);
+  };
+
+  const handleCancelDelete = (e) => {
+    e.stopPropagation();
+    setDeleteConfirm(null);
   };
 
   return (
@@ -52,12 +70,40 @@ export default function Sidebar({
               }`}
               onClick={() => handleSelectConversation(conv.id)}
             >
-              <div className="conversation-title">
-                {conv.title || 'New Conversation'}
+              <div className="conversation-content">
+                <div className="conversation-title">
+                  {conv.title || 'New Conversation'}
+                </div>
+                <div className="conversation-meta">
+                  {conv.message_count} messages
+                </div>
               </div>
-              <div className="conversation-meta">
-                {conv.message_count} messages
-              </div>
+              {deleteConfirm === conv.id ? (
+                <div className="delete-confirm">
+                  <button
+                    className="delete-confirm-btn yes"
+                    onClick={(e) => handleConfirmDelete(e, conv.id)}
+                    title="Confirm delete"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="delete-confirm-btn no"
+                    onClick={handleCancelDelete}
+                    title="Cancel"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="delete-btn"
+                  onClick={(e) => handleDeleteClick(e, conv.id)}
+                  title="Delete conversation"
+                >
+                  <span className="delete-icon">&#x2715;</span>
+                </button>
+              )}
             </div>
           ))
         )}

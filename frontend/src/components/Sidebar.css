@@ -93,6 +93,9 @@
   transition: all var(--transition);
   border: 1px solid transparent;
   background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .conversation-item:hover {
@@ -106,6 +109,11 @@
   box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.2);
 }
 
+.conversation-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .conversation-title {
   color: var(--text-primary);
   font-size: 14px;
@@ -114,6 +122,68 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Delete button */
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.conversation-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.delete-icon {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Delete confirmation */
+.delete-confirm {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.delete-confirm-btn {
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.delete-confirm-btn.yes {
+  background: #ef4444;
+  color: white;
+}
+
+.delete-confirm-btn.yes:hover {
+  background: #dc2626;
+}
+
+.delete-confirm-btn.no {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.delete-confirm-btn.no:hover {
+  background: var(--bg-card);
 }
 
 .conversation-item.active .conversation-title {

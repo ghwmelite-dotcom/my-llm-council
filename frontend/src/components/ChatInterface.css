@@ -6,6 +6,20 @@
   background: transparent;
 }
 
+.conversation-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 32px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -158,13 +172,23 @@
   }
 }
 
+.input-section {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 32px 0;
+}
+
 .input-form {
   display: flex;
   align-items: flex-end;
   gap: 14px;
-  padding: 24px 32px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-subtle);
+  padding: 12px 32px 24px;
 }
 
 .message-input {

@@ -1,7 +1,8 @@
 """OpenRouter API client for making LLM requests."""
 
 import httpx
-from typing import List, Dict, Any, Optional
+import json
+from typing import List, Dict, Any, Optional, AsyncGenerator
 from .config import OPENROUTER_API_KEY, OPENROUTER_API_URL
 
 
@@ -43,9 +44,17 @@ async def query_model(
             data = response.json()
             message = data['choices'][0]['message']
 
+            # Extract usage data if available
+            usage = data.get('usage', {})
+
             return {
                 'content': message.get('content'),
-                'reasoning_details': message.get('reasoning_details')
+                'reasoning_details': message.get('reasoning_details'),
+                'usage': {
+                    'input_tokens': usage.get('prompt_tokens', 0),
+                    'output_tokens': usage.get('completion_tokens', 0),
+                    'total_tokens': usage.get('total_tokens', 0),
+                }
             }
 
     except Exception as e:
@@ -53,9 +62,68 @@ async def query_model(
         return None
 
 
+async def query_model_stream(
+    model: str,
+    messages: List[Dict[str, str]],
+    timeout: float = 120.0
+) -> AsyncGenerator[str, None]:
+    """
+    Query a model with streaming response.
+
+    Args:
+        model: OpenRouter model identifier
+        messages: List of message dicts with 'role' and 'content'
+        timeout: Request timeout in seconds
+
+    Yields:
+        Token strings as they arrive
+    """
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            async with client.stream(
+                "POST",
+                OPENROUTER_API_URL,
+                headers=headers,
+                json=payload
+            ) as response:
+                response.raise_for_status()
+
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:]  # Remove "data: " prefix
+
+                        if data_str == "[DONE]":
+                            break
+
+                        try:
+                            data = json.loads(data_str)
+                            delta = data.get("choices", [{}])[0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                        except json.JSONDecodeError:
+                            continue
+
+    except Exception as e:
+        print(f"Error streaming from model {model}: {e}")
+        yield f"[Error: {str(e)}]"
+
+
 async def query_models_parallel(
     models: List[str],
-    messages: List[Dict[str, str]]
+    messages: List[Dict[str, str]],
+    image_ids: Optional[List[str]] = None
 ) -> Dict[str, Optional[Dict[str, Any]]]:
     """
     Query multiple models in parallel.
@@ -63,14 +131,23 @@ async def query_models_parallel(
     Args:
         models: List of OpenRouter model identifiers
         messages: List of message dicts to send to each model
+        image_ids: Optional list of image IDs for multimodal queries
 
     Returns:
         Dict mapping model identifier to response dict (or None if failed)
     """
     import asyncio
+    from .multimodal import prepare_multimodal_messages
 
-    # Create tasks for all models
-    tasks = [query_model(model, messages) for model in models]
+    # Create tasks for all models with multimodal support
+    tasks = []
+    for model in models:
+        if image_ids:
+            # Prepare messages with images for this specific model
+            model_messages = prepare_multimodal_messages(messages, image_ids, model)
+        else:
+            model_messages = messages
+        tasks.append(query_model(model, model_messages))
 
     # Wait for all to complete
     responses = await asyncio.gather(*tasks)

@@ -293,3 +293,27 @@ def update_conversation_title(conversation_id: str, title: str):
             raise ValueError(f"Conversation {conversation_id} not found")
         conversation["title"] = title
         save_conversation(conversation)
+
+
+def delete_conversation(conversation_id: str) -> bool:
+    """
+    Delete a conversation from storage.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        True if deleted, False if not found
+    """
+    collection = get_conversations_collection()
+    if collection is not None:
+        # MongoDB storage
+        result = collection.delete_one({"_id": conversation_id})
+        return result.deleted_count > 0
+    else:
+        # JSON file storage
+        path = _get_conversation_path(conversation_id)
+        if path.exists():
+            path.unlink()
+            return True
+        return False

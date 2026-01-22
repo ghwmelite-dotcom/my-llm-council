@@ -1,39 +1,55 @@
 """3-stage LLM Council orchestration with Tier 2 debate functionality."""
 
-from typing import List, Dict, Any, Tuple, Optional
-from .openrouter import query_models_parallel, query_model
+from typing import List, Dict, Any, Tuple, Optional, AsyncGenerator
+from .openrouter import query_models_parallel, query_model, query_model_stream
 from .config import (
     COUNCIL_MODELS, CHAIRMAN_MODEL, DEBATE_CONFIG,
     DEVILS_ADVOCATE_CONFIG, USER_PARTICIPATION_CONFIG
 )
+from .multimodal import prepare_multimodal_messages
 import re
 
 
-async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
+async def stage1_collect_responses(
+    user_query: str,
+    image_ids: Optional[List[str]] = None
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Stage 1: Collect individual responses from all council models.
 
     Args:
         user_query: The user's question
+        image_ids: Optional list of image IDs for multimodal queries
 
     Returns:
-        List of dicts with 'model' and 'response' keys
+        Tuple of (results list, usage list)
+        - results: List of dicts with 'model' and 'response' keys
+        - usage: List of dicts with 'model', 'input_tokens', 'output_tokens'
     """
-    messages = [{"role": "user", "content": user_query}]
+    base_messages = [{"role": "user", "content": user_query}]
 
-    # Query all models in parallel
-    responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    # Query all models in parallel with multimodal support
+    responses = await query_models_parallel(COUNCIL_MODELS, base_messages, image_ids=image_ids)
 
-    # Format results
+    # Format results and collect usage
     stage1_results = []
+    usage_data = []
     for model, response in responses.items():
         if response is not None:  # Only include successful responses
             stage1_results.append({
                 "model": model,
                 "response": response.get('content', '')
             })
+            # Collect usage data
+            usage = response.get('usage', {})
+            if usage:
+                usage_data.append({
+                    "model": model,
+                    "input_tokens": usage.get('input_tokens', 0),
+                    "output_tokens": usage.get('output_tokens', 0),
+                })
 
-    return stage1_results
+    return stage1_results, usage_data
 
 
 async def stage1_with_user_response(
@@ -65,66 +81,90 @@ async def stage1_with_user_response(
 
 async def stage1_single_model(
     user_query: str,
-    model: str
-) -> List[Dict[str, Any]]:
+    model: str,
+    image_ids: Optional[List[str]] = None
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Stage 1 variant: Query only a single model for simple queries.
 
     Args:
         user_query: The user's question
         model: The model identifier to query
+        image_ids: Optional list of image IDs for multimodal queries
 
     Returns:
-        List with single model response
+        Tuple of (results list, usage list)
     """
-    messages = [{"role": "user", "content": user_query}]
+    base_messages = [{"role": "user", "content": user_query}]
+    if image_ids:
+        messages = prepare_multimodal_messages(base_messages, image_ids, model)
+    else:
+        messages = base_messages
     response = await query_model(model, messages)
 
     if response is not None:
+        usage = response.get('usage', {})
+        usage_data = []
+        if usage:
+            usage_data.append({
+                "model": model,
+                "input_tokens": usage.get('input_tokens', 0),
+                "output_tokens": usage.get('output_tokens', 0),
+            })
         return [{
             "model": model,
             "response": response.get('content', '')
-        }]
+        }], usage_data
 
-    return []
+    return [], []
 
 
 async def stage1_mini_council(
     user_query: str,
-    models: List[str]
-) -> List[Dict[str, Any]]:
+    models: List[str],
+    image_ids: Optional[List[str]] = None
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Stage 1 variant: Query a subset of models (mini council).
 
     Args:
         user_query: The user's question
         models: List of model identifiers to query
+        image_ids: Optional list of image IDs for multimodal queries
 
     Returns:
-        List of dicts with 'model' and 'response' keys
+        Tuple of (results list, usage list)
     """
     messages = [{"role": "user", "content": user_query}]
 
-    # Query selected models in parallel
-    responses = await query_models_parallel(models, messages)
+    # Query selected models in parallel with multimodal support
+    responses = await query_models_parallel(models, messages, image_ids=image_ids)
 
-    # Format results
+    # Format results and collect usage
     stage1_results = []
+    usage_data = []
     for model, response in responses.items():
         if response is not None:
             stage1_results.append({
                 "model": model,
                 "response": response.get('content', '')
             })
+            usage = response.get('usage', {})
+            if usage:
+                usage_data.append({
+                    "model": model,
+                    "input_tokens": usage.get('input_tokens', 0),
+                    "output_tokens": usage.get('output_tokens', 0),
+                })
 
-    return stage1_results
+    return stage1_results, usage_data
 
 
 async def stage2_collect_rankings(
     user_query: str,
     stage1_results: List[Dict[str, Any]],
     verification_context: str = ""
-) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+) -> Tuple[List[Dict[str, Any]], Dict[str, str], List[Dict[str, Any]]]:
     """
     Stage 2: Each model ranks the anonymized responses.
 
@@ -134,7 +174,7 @@ async def stage2_collect_rankings(
         verification_context: Optional verification context from Stage 1.5
 
     Returns:
-        Tuple of (rankings list, label_to_model mapping)
+        Tuple of (rankings list, label_to_model mapping, usage list)
     """
     # Create anonymized labels for responses (Response A, Response B, etc.)
     labels = [chr(65 + i) for i in range(len(stage1_results))]  # A, B, C, ...
@@ -187,8 +227,9 @@ Now provide your evaluation and ranking:"""
     # Get rankings from all council models in parallel
     responses = await query_models_parallel(COUNCIL_MODELS, messages)
 
-    # Format results
+    # Format results and collect usage
     stage2_results = []
+    usage_data = []
     for model, response in responses.items():
         if response is not None:
             full_text = response.get('content', '')
@@ -198,8 +239,15 @@ Now provide your evaluation and ranking:"""
                 "ranking": full_text,
                 "parsed_ranking": parsed
             })
+            usage = response.get('usage', {})
+            if usage:
+                usage_data.append({
+                    "model": model,
+                    "input_tokens": usage.get('input_tokens', 0),
+                    "output_tokens": usage.get('output_tokens', 0),
+                })
 
-    return stage2_results, label_to_model
+    return stage2_results, label_to_model, usage_data
 
 
 def extract_critiques_for_model(
@@ -443,7 +491,7 @@ async def stage3_synthesize_final(
     stage2_results: List[Dict[str, Any]],
     rebuttals: Optional[List[Dict[str, Any]]] = None,
     devils_advocate: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Stage 3: Chairman synthesizes final response.
 
@@ -455,7 +503,9 @@ async def stage3_synthesize_final(
         devils_advocate: Optional devil's advocate challenge
 
     Returns:
-        Dict with 'model' and 'response' keys
+        Tuple of (result dict, usage list)
+        - result: Dict with 'model' and 'response' keys
+        - usage: List of usage dicts
     """
     # Build comprehensive context for chairman
     stage1_text = "\n\n".join([
@@ -507,17 +557,131 @@ Provide a clear, well-reasoned final answer that represents the council's collec
     # Query the chairman model
     response = await query_model(CHAIRMAN_MODEL, messages)
 
+    usage_data = []
     if response is None:
         # Fallback if chairman fails
         return {
             "model": CHAIRMAN_MODEL,
             "response": "Error: Unable to generate final synthesis."
-        }
+        }, usage_data
+
+    # Collect usage data
+    usage = response.get('usage', {})
+    if usage:
+        usage_data.append({
+            "model": CHAIRMAN_MODEL,
+            "input_tokens": usage.get('input_tokens', 0),
+            "output_tokens": usage.get('output_tokens', 0),
+        })
 
     return {
         "model": CHAIRMAN_MODEL,
         "response": response.get('content', '')
-    }
+    }, usage_data
+
+
+async def stage3_synthesize_stream(
+    user_query: str,
+    stage1_results: List[Dict[str, Any]],
+    stage2_results: List[Dict[str, Any]],
+    rebuttals: Optional[List[Dict[str, Any]]] = None,
+    devils_advocate: Optional[Dict[str, Any]] = None
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """
+    Stage 3: Chairman synthesizes final response with streaming output.
+
+    Args:
+        user_query: The original user query
+        stage1_results: Individual model responses from Stage 1
+        stage2_results: Rankings from Stage 2
+        rebuttals: Optional rebuttals from Stage 2B
+        devils_advocate: Optional devil's advocate challenge
+
+    Yields:
+        Dict with 'type' ('token' or 'complete') and content
+    """
+    # Build comprehensive context for chairman (same as non-streaming version)
+    stage1_text = "\n\n".join([
+        f"Model: {result['model']}\nResponse: {result['response']}"
+        for result in stage1_results
+    ])
+
+    stage2_text = "\n\n".join([
+        f"Model: {result['model']}\nRanking: {result['ranking']}"
+        for result in stage2_results
+    ])
+
+    # Include rebuttals if available
+    rebuttals_text = ""
+    if rebuttals:
+        rebuttals_text = "\n\nREBUTTALS:\n" + "\n\n".join([
+            f"Model: {r['model']}\nRebuttal: {r['rebuttal']}"
+            for r in rebuttals
+        ])
+
+    # Include devil's advocate if available
+    devils_text = ""
+    if devils_advocate:
+        devils_text = f"\n\nDEVIL'S ADVOCATE CHALLENGE:\n{devils_advocate['challenge']}"
+
+    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
+
+Original Question: {user_query}
+
+STAGE 1 - Individual Responses:
+{stage1_text}
+
+STAGE 2 - Peer Rankings:
+{stage2_text}
+{rebuttals_text}
+{devils_text}
+
+Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
+- The individual responses and their insights
+- The peer rankings and what they reveal about response quality
+- Any rebuttals and how they affect the strength of arguments
+- The devil's advocate challenge and whether the concerns are valid
+- Any patterns of agreement or disagreement
+
+Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+
+    messages = [{"role": "user", "content": chairman_prompt}]
+
+    # Estimate input tokens (roughly 4 characters per token)
+    input_text_length = len(chairman_prompt)
+    estimated_input_tokens = input_text_length // 4
+
+    # Stream from the chairman model
+    full_response = ""
+    try:
+        async for token in query_model_stream(CHAIRMAN_MODEL, messages):
+            full_response += token
+            yield {
+                "type": "token",
+                "token": token
+            }
+
+        # Estimate output tokens
+        estimated_output_tokens = len(full_response) // 4
+
+        # Yield the complete response at the end with usage estimate
+        yield {
+            "type": "complete",
+            "model": CHAIRMAN_MODEL,
+            "response": full_response,
+            "usage": {
+                "input_tokens": estimated_input_tokens,
+                "output_tokens": estimated_output_tokens,
+                "estimated": True,
+            }
+        }
+    except Exception as e:
+        yield {
+            "type": "error",
+            "error": str(e),
+            "model": CHAIRMAN_MODEL,
+            "response": full_response or "Error: Unable to generate final synthesis."
+        }
 
 
 def parse_ranking_from_text(ranking_text: str) -> List[str]:
@@ -648,7 +812,7 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
         Tuple of (stage1_results, stage2_results, stage3_result, metadata)
     """
     # Stage 1: Collect individual responses
-    stage1_results = await stage1_collect_responses(user_query)
+    stage1_results, stage1_usage = await stage1_collect_responses(user_query)
 
     # If no models responded successfully, return error
     if not stage1_results:
@@ -658,13 +822,13 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
         }, {}
 
     # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results)
+    stage2_results, label_to_model, stage2_usage = await stage2_collect_rankings(user_query, stage1_results)
 
     # Calculate aggregate rankings
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
 
     # Stage 3: Synthesize final answer
-    stage3_result = await stage3_synthesize_final(
+    stage3_result, stage3_usage = await stage3_synthesize_final(
         user_query,
         stage1_results,
         stage2_results

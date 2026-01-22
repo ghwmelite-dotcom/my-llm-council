@@ -5,6 +5,11 @@ import CouncilChamber from './components/immersive/CouncilChamber';
 import VoiceController from './components/voice/VoiceController';
 import LandingPage from './components/landing/LandingPage';
 import Toast from './components/Toast';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import CouncilBuilder from './components/CouncilBuilder';
+import MemoryManager from './components/MemoryManager';
+import CollaborationPanel from './components/CollaborationPanel';
+import PluginManager from './components/PluginManager';
 import { useImmersiveStore } from './stores/immersiveStore';
 import { useToastStore } from './stores/toastStore';
 import { api } from './api';
@@ -30,6 +35,21 @@ function App() {
 
   // Processing status for new features (routing, caching, verification)
   const [processingStatus, setProcessingStatus] = useState(null);
+
+  // Analytics dashboard state
+  const [showAnalytics, setShowAnalytics] = useState(false);
+
+  // Council builder state
+  const [showCouncilBuilder, setShowCouncilBuilder] = useState(false);
+
+  // Memory manager state
+  const [showMemoryManager, setShowMemoryManager] = useState(false);
+
+  // Collaboration panel state
+  const [showCollaboration, setShowCollaboration] = useState(false);
+
+  // Plugin manager state
+  const [showPluginManager, setShowPluginManager] = useState(false);
 
   // Persist showLanding to localStorage
   useEffect(() => {
@@ -129,7 +149,7 @@ function App() {
     }
   };
 
-  const handleSendMessage = async (content) => {
+  const handleSendMessage = async (content, imageIds = null) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
@@ -166,7 +186,7 @@ function App() {
       }));
 
       // Send message with streaming
-      await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
+      await api.sendMessageStream(currentConversationId, content, imageIds, (eventType, event) => {
         switch (eventType) {
           case 'routing_decision':
             // Smart routing determined the query complexity
@@ -261,6 +281,23 @@ function App() {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
               lastMsg.loading.stage3 = true;
+              // Initialize stage3 with empty streaming response
+              lastMsg.stage3 = { model: '', response: '', isStreaming: true };
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'stage3_token':
+            // Append token to the streaming response
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              if (lastMsg.stage3) {
+                lastMsg.stage3 = {
+                  ...lastMsg.stage3,
+                  response: lastMsg.stage3.response + event.token,
+                };
+              }
               return { ...prev, messages };
             });
             break;
@@ -270,8 +307,19 @@ function App() {
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
               const lastMsg = messages[messages.length - 1];
-              lastMsg.stage3 = event.data;
+              // Set final response and mark streaming as complete
+              lastMsg.stage3 = { ...event.data, isStreaming: false };
               lastMsg.loading.stage3 = false;
+              return { ...prev, messages };
+            });
+            break;
+
+          case 'cost_summary':
+            // Store cost data in the message metadata
+            setCurrentConversation((prev) => {
+              const messages = [...prev.messages];
+              const lastMsg = messages[messages.length - 1];
+              lastMsg.costSummary = event.data;
               return { ...prev, messages };
             });
             break;
@@ -373,6 +421,50 @@ function App() {
               <span className="toggle-label">Voice</span>
             </button>
           </div>
+          <div className="toggle-group">
+            <button
+              className="analytics-btn"
+              onClick={() => setShowAnalytics(true)}
+              title="View Analytics"
+            >
+              <span className="toggle-icon">📊</span>
+              <span className="toggle-label">Analytics</span>
+            </button>
+            <button
+              className="analytics-btn"
+              onClick={() => setShowMemoryManager(true)}
+              title="Memory Bank"
+            >
+              <span className="toggle-icon">🧠</span>
+              <span className="toggle-label">Memory</span>
+            </button>
+          </div>
+          <div className="toggle-group">
+            <button
+              className="config-btn"
+              onClick={() => setShowCouncilBuilder(true)}
+              title="Configure Council"
+            >
+              <span className="toggle-icon">⚙️</span>
+              <span className="toggle-label">Council</span>
+            </button>
+            <button
+              className={`config-btn ${showCollaboration ? 'active' : ''}`}
+              onClick={() => setShowCollaboration(!showCollaboration)}
+              title="Real-time Collaboration"
+            >
+              <span className="toggle-icon">👥</span>
+              <span className="toggle-label">Collab</span>
+            </button>
+            <button
+              className="config-btn"
+              onClick={() => setShowPluginManager(true)}
+              title="Plugin Manager"
+            >
+              <span className="toggle-icon">🔌</span>
+              <span className="toggle-label">Plugins</span>
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -397,6 +489,61 @@ function App() {
 
       {/* Toast Notifications */}
       <Toast />
+
+      {/* Analytics Dashboard */}
+      <AnalyticsDashboard
+        isOpen={showAnalytics}
+        onClose={() => setShowAnalytics(false)}
+      />
+
+      {/* Council Builder */}
+      <CouncilBuilder
+        isOpen={showCouncilBuilder}
+        onClose={() => setShowCouncilBuilder(false)}
+        onApply={async (config) => {
+          try {
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/config`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config),
+              }
+            );
+            if (response.ok) {
+              toast.success('Council configuration updated');
+            } else {
+              toast.error('Failed to update configuration');
+            }
+          } catch (error) {
+            console.error('Failed to update config:', error);
+            toast.error('Failed to update configuration');
+          }
+        }}
+      />
+
+      {/* Memory Manager */}
+      <MemoryManager
+        isOpen={showMemoryManager}
+        onClose={() => setShowMemoryManager(false)}
+      />
+
+      {/* Collaboration Panel */}
+      <CollaborationPanel
+        conversationId={currentConversationId}
+        isOpen={showCollaboration}
+        onClose={() => setShowCollaboration(false)}
+        onNewMessage={(msg) => {
+          // Handle incoming collaborative messages
+          console.log('Collaborative message:', msg);
+        }}
+      />
+
+      {/* Plugin Manager */}
+      <PluginManager
+        isOpen={showPluginManager}
+        onClose={() => setShowPluginManager(false)}
+      />
     </div>
   );
 }

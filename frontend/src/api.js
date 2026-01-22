@@ -47,6 +47,22 @@ export const api = {
   },
 
   /**
+   * Delete a conversation.
+   */
+  async deleteConversation(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to delete conversation');
+    }
+    return response.json();
+  },
+
+  /**
    * Send a message in a conversation.
    */
   async sendMessage(conversationId, content) {
@@ -73,7 +89,37 @@ export const api = {
    * @param {function} onEvent - Callback function for each event: (eventType, data) => void
    * @returns {Promise<void>}
    */
-  async sendMessageStream(conversationId, content, onEvent) {
+  /**
+   * Export a conversation as Markdown.
+   */
+  async exportMarkdown(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/export/markdown`
+    );
+    if (!response.ok) {
+      throw new Error('Failed to export conversation');
+    }
+    const blob = await response.blob();
+    const filename = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'conversation.md';
+    return { blob, filename };
+  },
+
+  /**
+   * Export a conversation as HTML.
+   */
+  async exportHtml(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/export/html`
+    );
+    if (!response.ok) {
+      throw new Error('Failed to export conversation');
+    }
+    const blob = await response.blob();
+    const filename = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'conversation.html';
+    return { blob, filename };
+  },
+
+  async sendMessageStream(conversationId, content, imageIds, onEvent) {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
@@ -81,7 +127,7 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, image_ids: imageIds }),
       }
     );
 

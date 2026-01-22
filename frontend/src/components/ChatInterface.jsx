@@ -5,6 +5,11 @@ import Stage2 from './Stage2';
 import Stage3 from './Stage3';
 import StageSkeleton from './StageSkeleton';
 import ProcessingStatus from './ProcessingStatus';
+import CostDisplay from './CostDisplay';
+import ExportButton from './ExportButton';
+import QueryTemplates from './QueryTemplates';
+import FeedbackWidget from './FeedbackWidget';
+import ImageUpload from './ImageUpload';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -14,6 +19,7 @@ export default function ChatInterface({
   processingStatus,
 }) {
   const [input, setInput] = useState('');
+  const [imageIds, setImageIds] = useState([]);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -27,8 +33,9 @@ export default function ChatInterface({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (input.trim() && !isLoading) {
-      onSendMessage(input);
+      onSendMessage(input, imageIds.length > 0 ? imageIds : null);
       setInput('');
+      setImageIds([]);
     }
   };
 
@@ -53,6 +60,18 @@ export default function ChatInterface({
 
   return (
     <div className="chat-interface">
+      {/* Conversation Header with Export */}
+      {conversation.messages.length > 0 && (
+        <div className="conversation-header">
+          <div className="header-actions">
+            <ExportButton
+              conversationId={conversation.id}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="messages-container">
         {conversation.messages.length === 0 ? (
           <div className="empty-state">
@@ -98,6 +117,17 @@ export default function ChatInterface({
                     <StageSkeleton stage={3} />
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
+
+                  {/* Cost Display */}
+                  {msg.costSummary && <CostDisplay costSummary={msg.costSummary} />}
+
+                  {/* Feedback Widget - show after Stage 3 is complete */}
+                  {msg.stage3 && !msg.stage3.isStreaming && conversation.id && (
+                    <FeedbackWidget
+                      conversationId={conversation.id}
+                      messageIndex={index}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -120,24 +150,36 @@ export default function ChatInterface({
       </div>
 
       {conversation.messages.length === 0 && (
-        <form className="input-form" onSubmit={handleSubmit}>
-          <textarea
-            className="message-input"
-            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            rows={3}
-          />
-          <button
-            type="submit"
-            className="send-button"
-            disabled={!input.trim() || isLoading}
-          >
-            Send
-          </button>
-        </form>
+        <div className="input-section">
+          <div className="input-toolbar">
+            <QueryTemplates
+              onSelectTemplate={(template) => setInput(template)}
+              disabled={isLoading}
+            />
+          </div>
+          <ImageUpload
+              onImagesChange={setImageIds}
+              disabled={isLoading}
+            />
+          <form className="input-form" onSubmit={handleSubmit}>
+            <textarea
+              className="message-input"
+              placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading}
+              rows={3}
+            />
+            <button
+              type="submit"
+              className="send-button"
+              disabled={!input.trim() || isLoading}
+            >
+              Send
+            </button>
+          </form>
+        </div>
       )}
     </div>
   );
