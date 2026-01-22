@@ -1,0 +1,185 @@
+.stage-skeleton {
+  margin: 24px 0;
+  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(8px);
+}
+
+.stage-skeleton-3 {
+  background: rgba(34, 197, 94, 0.03);
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.skeleton-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.skeleton-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+
+.skeleton-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.skeleton-tab {
+  padding: 10px 18px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.skeleton-content {
+  background: var(--bg-secondary);
+  padding: 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.skeleton-content.stage3-content {
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.skeleton-model-name {
+  width: 180px;
+  height: 12px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-line {
+  height: 14px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.skeleton-ranking-header {
+  width: 150px;
+  height: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.skeleton-rankings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-rank-item {
+  height: 40px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.skeleton-chairman {
+  width: 200px;
+  height: 12px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 4px;
+  margin-bottom: 18px;
+}
+
+.skeleton-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.skeleton-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shimmer animation */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.04),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Stage-specific spinner colors */
+.stage-skeleton-1 .skeleton-spinner {
+  border-top-color: var(--accent-blue);
+}
+
+.stage-skeleton-2 .skeleton-spinner {
+  border-top-color: #f59e0b;
+}
+
+.stage-skeleton-3 .skeleton-spinner {
+  border-top-color: #22c55e;
+}
