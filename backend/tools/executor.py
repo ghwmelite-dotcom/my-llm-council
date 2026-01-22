@@ -20,6 +20,40 @@ class ToolCall:
     raw: str = ""
 
 
+def extract_balanced_json(start_str: str, full_text: str, start_pos: int) -> str:
+    """
+    Extract a balanced JSON object from text starting at a position.
+
+    Args:
+        start_str: Initial match string
+        full_text: Full text to search in
+        start_pos: Starting position of the JSON
+
+    Returns:
+        Balanced JSON string or original start_str
+    """
+    # Find the opening brace in the full text from start_pos
+    brace_count = 0
+    json_start = -1
+    json_end = -1
+
+    for i in range(start_pos, len(full_text)):
+        char = full_text[i]
+        if char == '{':
+            if json_start == -1:
+                json_start = i
+            brace_count += 1
+        elif char == '}':
+            brace_count -= 1
+            if brace_count == 0:
+                json_end = i + 1
+                break
+
+    if json_start != -1 and json_end != -1:
+        return full_text[json_start:json_end]
+    return start_str
+
+
 def parse_tool_calls(response_text: str) -> List[ToolCall]:
     """
     Parse tool calls from model response.
@@ -37,24 +71,29 @@ def parse_tool_calls(response_text: str) -> List[ToolCall]:
     """
     calls = []
 
-    # Pattern 1: XML-style tags
-    xml_pattern = r'<tool_call>\s*({[^}]+})\s*</tool_call>'
+    # Pattern 1: XML-style tags (handles nested braces)
+    xml_pattern = r'<tool_call>\s*(\{.*?\})\s*</tool_call>'
     for match in re.finditer(xml_pattern, response_text, re.DOTALL):
         try:
-            data = json.loads(match.group(1))
-            calls.append(ToolCall(
-                name=data.get("name", ""),
-                arguments=data.get("arguments", {}),
-                raw=match.group(0)
-            ))
+            # Extract the JSON and try to parse it
+            json_str = match.group(1)
+            # Handle nested braces by finding balanced JSON
+            json_str = extract_balanced_json(json_str, response_text, match.start(1))
+            if json_str:
+                data = json.loads(json_str)
+                calls.append(ToolCall(
+                    name=data.get("name", ""),
+                    arguments=data.get("arguments", {}),
+                    raw=match.group(0)
+                ))
         except json.JSONDecodeError:
             pass
 
     # Pattern 2: Markdown code blocks labeled as tool_call
-    md_pattern = r'```tool_call\s*\n({[^`]+})\s*\n```'
-    for match in re.finditer(md_pattern, response_text, re.DOTALL):
+    md_pattern = r'```tool_call\s*\n([\s\S]*?)\n```'
+    for match in re.finditer(md_pattern, response_text):
         try:
-            data = json.loads(match.group(1))
+            data = json.loads(match.group(1).strip())
             calls.append(ToolCall(
                 name=data.get("name", ""),
                 arguments=data.get("arguments", {}),
@@ -63,8 +102,12 @@ def parse_tool_calls(response_text: str) -> List[ToolCall]:
         except json.JSONDecodeError:
             pass
 
-    # Pattern 3: JSON objects with "tool" or "function" keys
-    json_pattern = r'\{[^{}]*"(?:tool|function)"[^{}]*\}'
+    # Skip Pattern 3 if we already found calls from XML or Markdown
+    if calls:
+        return calls
+
+    # Pattern 3: JSON objects with "name" key followed by "arguments" (fallback)
+    json_pattern = r'\{"name":\s*"[^"]+",\s*"arguments":\s*\{[^}]*\}\}'
     for match in re.finditer(json_pattern, response_text):
         try:
             data = json.loads(match.group(0))
