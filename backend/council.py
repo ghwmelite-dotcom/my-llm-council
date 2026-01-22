@@ -63,9 +63,67 @@ async def stage1_with_user_response(
     return ai_responses
 
 
+async def stage1_single_model(
+    user_query: str,
+    model: str
+) -> List[Dict[str, Any]]:
+    """
+    Stage 1 variant: Query only a single model for simple queries.
+
+    Args:
+        user_query: The user's question
+        model: The model identifier to query
+
+    Returns:
+        List with single model response
+    """
+    messages = [{"role": "user", "content": user_query}]
+    response = await query_model(model, messages)
+
+    if response is not None:
+        return [{
+            "model": model,
+            "response": response.get('content', '')
+        }]
+
+    return []
+
+
+async def stage1_mini_council(
+    user_query: str,
+    models: List[str]
+) -> List[Dict[str, Any]]:
+    """
+    Stage 1 variant: Query a subset of models (mini council).
+
+    Args:
+        user_query: The user's question
+        models: List of model identifiers to query
+
+    Returns:
+        List of dicts with 'model' and 'response' keys
+    """
+    messages = [{"role": "user", "content": user_query}]
+
+    # Query selected models in parallel
+    responses = await query_models_parallel(models, messages)
+
+    # Format results
+    stage1_results = []
+    for model, response in responses.items():
+        if response is not None:
+            stage1_results.append({
+                "model": model,
+                "response": response.get('content', '')
+            })
+
+    return stage1_results
+
+
 async def stage2_collect_rankings(
     user_query: str,
-    stage1_results: List[Dict[str, Any]]
+    stage1_results: List[Dict[str, Any]],
+    verification_context: str = ""
 ) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
     """
     Stage 2: Each model ranks the anonymized responses.
@@ -73,6 +131,7 @@ async def stage2_collect_rankings(
     Args:
         user_query: The original user query
         stage1_results: Results from Stage 1
+        verification_context: Optional verification context from Stage 1.5
 
     Returns:
         Tuple of (rankings list, label_to_model mapping)
@@ -120,7 +179,7 @@ FINAL RANKING:
 1. Response C
 2. Response A
 3. Response B
-
+{verification_context}
 Now provide your evaluation and ranking:"""
 
     messages = [{"role": "user", "content": ranking_prompt}]

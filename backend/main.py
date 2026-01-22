@@ -15,9 +15,14 @@ from .council import (
     generate_conversation_title, stage1_collect_responses,
     stage2_collect_rankings, stage3_synthesize_final,
     calculate_aggregate_rankings, stage2b_collect_rebuttals,
-    stage2_devils_advocate, check_consensus
+    stage2_devils_advocate, check_consensus,
+    stage1_single_model, stage1_mini_council
 )
-from .config import COUNCIL_MODELS, DEBATE_CONFIG
+from .config import COUNCIL_MODELS, DEBATE_CONFIG, SMART_ROUTING_CONFIG, SEMANTIC_CACHE_CONFIG, VERIFICATION_CONFIG
+from .routing import route_query_smart
+from .cache import check_cache, cache_response, get_cache_stats, clear_cache
+from .verification import run_verification_stage, should_run_verification
+from .api import gateway_router
 
 # Tier 4 imports
 from .predictions import (
@@ -54,6 +59,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount OpenAI-compatible API gateway
+app.include_router(gateway_router)
 
 
 class CreateConversationRequest(BaseModel):
@@ -130,6 +138,15 @@ async def get_conversation(conversation_id: str):
     return conversation
 
 
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """Delete a conversation."""
+    deleted = storage.delete_conversation(conversation_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"status": "deleted", "id": conversation_id}
+
+
 @app.post("/api/conversations/{conversation_id}/message")
 async def send_message(conversation_id: str, request: SendMessageRequest):
     """
@@ -198,16 +215,75 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             if is_first_message:
                 title_task = asyncio.create_task(generate_conversation_title(request.content))
 
-            # Stage 1: Collect responses
-            yield f"data: {json.dumps({'type': 'stage1_start', 'data': {'models': COUNCIL_MODELS}})}\n\n"
-            stage1_results = await stage1_collect_responses(request.content)
+            # Check semantic cache first
+            cache_result = check_cache(request.content) if SEMANTIC_CACHE_CONFIG.get("enabled", True) else None
+            if cache_result:
+                cached_response, similarity = cache_result
+                yield f"data: {json.dumps({'type': 'cache_hit', 'data': {'similarity': similarity, 'original_query': cached_response.query, 'routing_tier': cached_response.routing_tier}})}\n\n"
+
+                # Return cached results
+                yield f"data: {json.dumps({'type': 'stage1_complete', 'data': cached_response.stage1_results})}\n\n"
+                yield f"data: {json.dumps({'type': 'stage2_complete', 'data': cached_response.stage2_results, 'metadata': cached_response.metadata})}\n\n"
+                yield f"data: {json.dumps({'type': 'stage3_complete', 'data': cached_response.stage3_result})}\n\n"
+
+                # Wait for title generation if it was started
+                if title_task:
+                    title = await title_task
+                    storage.update_conversation_title(conversation_id, title)
+                    yield f"data: {json.dumps({'type': 'title_complete', 'data': {'title': title}})}\n\n"
+
+                # Save cached response as new message
+                storage.add_assistant_message(
+                    conversation_id,
+                    cached_response.stage1_results,
+                    cached_response.stage2_results,
+                    cached_response.stage3_result
+                )
+
+                yield f"data: {json.dumps({'type': 'complete', 'metadata': {'cached': True, 'similarity': similarity}})}\n\n"
+                return
+
+            # Smart routing: determine council size based on complexity
+            routing_decision = None
+            if SMART_ROUTING_CONFIG.get("enabled", True):
+                routing_decision = route_query_smart(request.content)
+                yield f"data: {json.dumps({'type': 'routing_decision', 'data': routing_decision.to_dict()})}\n\n"
+
+            # Stage 1: Collect responses based on routing decision
+            if routing_decision and routing_decision.tier == 1:
+                # Single model for simple queries
+                yield f"data: {json.dumps({'type': 'stage1_start', 'data': {'models': routing_decision.models, 'tier': 1}})}\n\n"
+                stage1_results = await stage1_single_model(request.content, routing_decision.models[0])
+            elif routing_decision and routing_decision.tier == 2:
+                # Mini council for medium complexity
+                yield f"data: {json.dumps({'type': 'stage1_start', 'data': {'models': routing_decision.models, 'tier': 2}})}\n\n"
+                stage1_results = await stage1_mini_council(request.content, routing_decision.models)
+            else:
+                # Full council (default)
+                yield f"data: {json.dumps({'type': 'stage1_start', 'data': {'models': COUNCIL_MODELS, 'tier': 3}})}\n\n"
+                stage1_results = await stage1_collect_responses(request.content)
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
-            # Stage 2: Collect rankings
+            # Stage 1.5: Factual verification (if enabled and applicable)
+            verification_report = None
+            stage2_verification_context = ""
+            current_tier = routing_decision.tier if routing_decision else 3
+
+            if should_run_verification(stage1_results, current_tier):
+                yield f"data: {json.dumps({'type': 'stage1_5_start', 'data': {'reason': 'Verifying factual claims'}})}\n\n"
+                verification_report, stage2_verification_context = await run_verification_stage(
+                    stage1_results, request.content
+                )
+                if verification_report:
+                    yield f"data: {json.dumps({'type': 'stage1_5_complete', 'data': verification_report.to_dict()})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'type': 'stage1_5_complete', 'data': {'skipped': True, 'reason': 'Not enough claims to verify'}})}\n\n"
+
+            # Stage 2: Collect rankings (with verification context if available)
             yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
-            stage2_results, label_to_model = await stage2_collect_rankings(request.content, stage1_results)
+            stage2_results, label_to_model = await stage2_collect_rankings(request.content, stage1_results, stage2_verification_context)
             aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
+            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings, 'verification_report': verification_report.to_dict() if verification_report else None}})}\n\n"
 
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
@@ -228,6 +304,17 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 stage3_result
             )
 
+            # Cache the response for future similar queries
+            if SEMANTIC_CACHE_CONFIG.get("enabled", True):
+                cache_response(
+                    query=request.content,
+                    stage1_results=stage1_results,
+                    stage2_results=stage2_results,
+                    stage3_result=stage3_result,
+                    metadata={'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings},
+                    routing_tier=routing_decision.tier if routing_decision else 3
+                )
+
             # Send completion event
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
@@ -243,6 +330,22 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             "Connection": "keep-alive",
         }
     )
+
+
+# =============================================================================
+# Cache API Endpoints
+# =============================================================================
+
+@app.get("/api/cache/stats")
+async def api_get_cache_stats():
+    """Get semantic cache statistics."""
+    return get_cache_stats()
+
+
+@app.post("/api/cache/clear")
+async def api_clear_cache():
+    """Clear the semantic cache."""
+    return clear_cache()
 
 
 @app.post("/api/conversations/{conversation_id}/message/stream/v2")

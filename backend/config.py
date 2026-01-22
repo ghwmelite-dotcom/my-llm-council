@@ -30,6 +30,74 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 DATA_DIR = "data/conversations"
 
 # =============================================================================
+# SMART ROUTING: Query Complexity-Based Routing
+# =============================================================================
+
+SMART_ROUTING_CONFIG = {
+    "enabled": True,
+    "complexity_threshold_single": 0.3,  # Below this -> single model
+    "complexity_threshold_full": 0.7,    # Above this -> full council
+    "single_model": "anthropic/claude-sonnet-4.5",  # Fast, capable model
+    "mini_council_size": 3,              # Models for medium complexity
+}
+
+# =============================================================================
+# SEMANTIC CACHING: Response Caching by Query Similarity
+# =============================================================================
+
+SEMANTIC_CACHE_CONFIG = {
+    "enabled": True,
+    "storage_path": "data/cache/semantic_cache.json",
+    "similarity_threshold": 0.85,  # Min similarity for cache hit
+    "max_cache_size": 1000,        # Max cached responses
+    "ttl_hours": 24,               # Time-to-live in hours
+}
+
+# =============================================================================
+# FACTUAL VERIFICATION: Stage 1.5 Contradiction Detection
+# =============================================================================
+
+VERIFICATION_CONFIG = {
+    "enabled": True,
+    "model": "anthropic/claude-sonnet-4.5",  # Model for claim extraction
+    "min_claims_for_verification": 3,         # Min claims to trigger verification
+    "contradiction_threshold": 0.7,           # Confidence threshold for contradictions
+}
+
+# =============================================================================
+# AGENTIC TOOLS: Tool Use for Council Members
+# =============================================================================
+
+TOOLS_CONFIG = {
+    "enabled": True,
+    "available_tools": ["web_search", "calculator", "code_executor"],
+    "max_tool_calls_per_response": 3,
+    "tool_timeout_seconds": 30,
+    "code_execution_enabled": False,  # Safety default - enable carefully
+}
+
+# =============================================================================
+# API GATEWAY: OpenAI-Compatible API Endpoint
+# =============================================================================
+
+API_GATEWAY_CONFIG = {
+    "enabled": True,
+    "require_api_key": False,  # Set True to require COUNCIL_API_KEY env var
+    "default_council": "general",
+    "include_deliberation_default": False,  # Include stage data in responses
+    "model_name_mapping": {
+        # Map OpenAI model names to councils for compatibility
+        "gpt-4": "general",
+        "gpt-4o": "general",
+        "gpt-3.5-turbo": "general",
+        "claude-3-opus": "general",
+        "council-math": "math",
+        "council-ethics": "ethics",
+        "council-creative": "creative",
+    },
+}
+
+# =============================================================================
 # TIER 2: Deeper Deliberation Configuration
 # =============================================================================
 
