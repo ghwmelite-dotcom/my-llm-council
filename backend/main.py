@@ -75,6 +75,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Log configuration on startup."""
+    from .config import DATA_BASE_DIR, data_path
+    print("=" * 60)
+    print("[STARTUP] LLM Council Backend Starting")
+    print(f"[STARTUP] DATA_BASE_DIR: {DATA_BASE_DIR}")
+    print(f"[STARTUP] Users path: {data_path('auth', 'users.json')}")
+    print(f"[STARTUP] CORS origins: {CORS_ORIGINS}")
+
+    # Initialize user store to trigger load logging
+    store = get_user_store()
+    print(f"[STARTUP] UserStore initialized with {len(store.users)} users")
+    print(f"[STARTUP] Usernames: {list(store.username_index.keys())}")
+    print("=" * 60)
+
 # Mount OpenAI-compatible API gateway
 app.include_router(gateway_router)
 

@@ -31,16 +31,28 @@ class UserStore:
 
     def _load_users(self):
         """Load users from JSON file."""
+        print(f"[UserStore] Attempting to load users from: {self.storage_path}")
+        print(f"[UserStore] File exists: {os.path.exists(self.storage_path)}")
+
         if os.path.exists(self.storage_path):
             try:
                 with open(self.storage_path, 'r') as f:
-                    data = json.load(f)
+                    raw_content = f.read()
+                    print(f"[UserStore] File size: {len(raw_content)} bytes")
+                    data = json.loads(raw_content)
+                    user_count = len(data.get('users', []))
+                    print(f"[UserStore] Found {user_count} users in file")
                     for user_data in data.get('users', []):
                         user = User(**user_data)
                         self.users[user.id] = user
                         self.username_index[user.username.lower()] = user.id
+                        print(f"[UserStore] Loaded user: {user.username} (id: {user.id})")
             except (json.JSONDecodeError, KeyError) as e:
-                print(f"Error loading users: {e}")
+                print(f"[UserStore] ERROR loading users: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            print(f"[UserStore] No users file found, starting fresh")
 
     def _save_users(self):
         """Save users to JSON file."""
