@@ -82,7 +82,14 @@ async def startup_event():
     from .config import DATA_BASE_DIR, data_path
     print("=" * 60)
     print("[STARTUP] LLM Council Backend Starting")
-    print(f"[STARTUP] DATA_BASE_DIR: {DATA_BASE_DIR}")
+
+    # Debug: Print relevant env vars
+    print("[STARTUP] Environment variables:")
+    for key in ['DATA_BASE_DIR', 'RAILWAY_ENVIRONMENT', 'RAILWAY_SERVICE_NAME', 'PORT']:
+        val = os.getenv(key, '<not set>')
+        print(f"  {key}={val}")
+
+    print(f"[STARTUP] Resolved DATA_BASE_DIR: {DATA_BASE_DIR}")
     print(f"[STARTUP] Users path: {data_path('auth', 'users.json')}")
     print(f"[STARTUP] CORS origins: {CORS_ORIGINS}")
 
