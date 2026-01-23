@@ -4,7 +4,7 @@ builder = "nixpacks"
 [deploy]
 startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"
 
-# Persistent volume for user data, conversations, etc.
-[[mounts]]
-source = "council_data"
-destination = "/data"
+# NOTE: Persistent volume must be configured via Railway dashboard:
+# 1. Go to backend service -> Settings -> Volumes
+# 2. Add volume with mount path: /data
+# 3. Set environment variable: DATA_BASE_DIR=/data
