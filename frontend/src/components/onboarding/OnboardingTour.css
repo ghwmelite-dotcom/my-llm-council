@@ -10,6 +10,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Allow clicks to pass through overlay, but dialog will catch them */
+  pointer-events: none;
+}
+
+.onboarding-overlay > * {
+  pointer-events: auto;
 }
 
 @keyframes fadeIn {
@@ -38,7 +44,7 @@
   width: 380px;
   max-width: calc(100vw - 32px);
   min-height: 320px;
-  background: white;
+  background: #ffffff;
   border-radius: 20px;
   padding: 32px;
   box-shadow:
@@ -46,15 +52,21 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 2002;
   pointer-events: auto;
-  /* Fixed position to prevent movement between steps */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  animation: dialogAppear 0.3s ease-out;
 }
 
-/* Smooth content transitions without dialog movement */
-.onboarding-dialog > * {
-  transition: opacity 0.2s ease;
+@keyframes dialogAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .onboarding-content {
