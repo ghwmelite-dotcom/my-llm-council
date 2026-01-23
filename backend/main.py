@@ -1293,10 +1293,17 @@ async def get_training_data(limit: int = 50):
 @app.post("/api/auth/register")
 async def register_user(request: UserCreate):
     """Register a new user."""
+    from .config import DATA_BASE_DIR
+    print(f"[AUTH] Register attempt for: {request.username}")
+    print(f"[AUTH] DATA_BASE_DIR: {DATA_BASE_DIR}")
+
     store = get_user_store()
+    print(f"[AUTH] Storage path: {store.storage_path}")
+    print(f"[AUTH] Existing users: {len(store.users)}")
 
     # Check if username already exists
     if store.username_exists(request.username):
+        print(f"[AUTH] Username {request.username} already exists")
         raise HTTPException(status_code=400, detail="Username already taken")
 
     # Create user
@@ -1308,7 +1315,10 @@ async def register_user(request: UserCreate):
     )
 
     if not user:
+        print(f"[AUTH] Failed to create user {request.username}")
         raise HTTPException(status_code=400, detail="Failed to create user")
+
+    print(f"[AUTH] Successfully created user: {user.id}")
 
     # Create token
     token = create_token(user.id, user.username)
@@ -1330,11 +1340,21 @@ async def register_user(request: UserCreate):
 @app.post("/api/auth/login")
 async def login_user(request: UserLogin):
     """Login a user."""
+    from .config import DATA_BASE_DIR
+    print(f"[AUTH] Login attempt for: {request.username}")
+    print(f"[AUTH] DATA_BASE_DIR: {DATA_BASE_DIR}")
+
     store = get_user_store()
+    print(f"[AUTH] Storage path: {store.storage_path}")
+    print(f"[AUTH] Total users in store: {len(store.users)}")
+    print(f"[AUTH] Username index: {list(store.username_index.keys())}")
 
     user = store.authenticate(request.username, request.password)
     if not user:
+        print(f"[AUTH] Authentication failed for: {request.username}")
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    print(f"[AUTH] Login successful for: {user.username}")
 
     # Create token
     token = create_token(user.id, user.username)
