@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 
+from ..config import data_path
+
 
 @dataclass
 class Room:
@@ -24,7 +26,9 @@ class Room:
 class RoomManager:
     """Manages collaborative rooms."""
 
-    def __init__(self, storage_path: str = "data/collaboration/rooms.json"):
+    def __init__(self, storage_path: str = None):
+        if storage_path is None:
+            storage_path = data_path("collaboration", "rooms.json")
         self.storage_path = storage_path
         self.rooms: Dict[str, Room] = {}
         self._ensure_storage_dir()

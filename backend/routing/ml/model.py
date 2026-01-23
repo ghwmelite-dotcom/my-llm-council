@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from .features import extract_features, QueryFeatures
+from ...config import data_path
 
 
 @dataclass
@@ -27,7 +28,9 @@ class RoutingModel:
     from historical data.
     """
 
-    def __init__(self, model_path: str = "data/routing/model.json"):
+    def __init__(self, model_path: str = None):
+        if model_path is None:
+            model_path = data_path("routing", "model.json")
         self.model_path = model_path
         self.weights: List[float] = []
         self.bias: List[float] = [0.0, 0.0, 0.0]  # Bias for each tier

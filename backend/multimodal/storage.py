@@ -9,8 +9,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from dataclasses import dataclass, asdict
 
+from ..config import data_path
 
-UPLOAD_DIR = Path("data/uploads")
+
+UPLOAD_DIR = Path(data_path("uploads"))
 METADATA_FILE = UPLOAD_DIR / "metadata.json"
 MAX_AGE_HOURS = 24  # Images expire after 24 hours
 MAX_SIZE_MB = 10  # Maximum image size

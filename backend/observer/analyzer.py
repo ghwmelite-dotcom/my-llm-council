@@ -5,7 +5,7 @@ import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
-from ..config import OBSERVER_CONFIG
+from ..config import OBSERVER_CONFIG, data_path
 from .bias_detector import detect_biases
 
 
@@ -13,10 +13,7 @@ class AnalysisStore:
     """Stores analysis results."""
 
     def __init__(self, storage_path: str = None):
-        self.storage_path = storage_path or os.path.join(
-            OBSERVER_CONFIG.get('storage_path', 'data/observer'),
-            'analyses.json'
-        )
+        self.storage_path = storage_path or data_path("observer", "analyses.json")
         self.analyses: List[Dict[str, Any]] = []
         self._ensure_storage_dir()
         self._load_analyses()

@@ -5,6 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# =============================================================================
+# BASE DATA DIRECTORY (for Railway Volume persistence)
+# =============================================================================
+# Set DATA_BASE_DIR environment variable to use persistent storage
+# On Railway, mount a volume to /data and set DATA_BASE_DIR=/data
+DATA_BASE_DIR = os.getenv("DATA_BASE_DIR", "data")
+
+def data_path(*paths: str) -> str:
+    """Get a path relative to the data base directory."""
+    return os.path.join(DATA_BASE_DIR, *paths)
+
 # OpenRouter API key
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -27,7 +38,7 @@ CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Data directory for conversation storage
-DATA_DIR = "data/conversations"
+DATA_DIR = data_path("conversations")
 
 # =============================================================================
 # SMART ROUTING: Query Complexity-Based Routing
@@ -47,7 +58,7 @@ SMART_ROUTING_CONFIG = {
 
 SEMANTIC_CACHE_CONFIG = {
     "enabled": True,
-    "storage_path": "data/cache/semantic_cache.json",
+    "storage_path": data_path("cache", "semantic_cache.json"),
     "similarity_threshold": 0.85,  # Min similarity for cache hit
     "max_cache_size": 1000,        # Max cached responses
     "ttl_hours": 24,               # Time-to-live in hours
@@ -130,8 +141,8 @@ USER_PARTICIPATION_CONFIG = {
 # Memory settings
 MEMORY_CONFIG = {
     "enabled": True,
-    "storage_path": "data/memory/memories.json",
-    "relationships_path": "data/memory/relationships.json",
+    "storage_path": data_path("memory", "memories.json"),
+    "relationships_path": data_path("memory", "relationships.json"),
     "max_memories_per_query": 5,
     "memory_relevance_threshold": 0.3,
 }
@@ -203,7 +214,7 @@ FEEDS_CONFIG = {
 # Prediction market settings
 PREDICTIONS_CONFIG = {
     "enabled": True,
-    "storage_path": "data/predictions",
+    "storage_path": data_path("predictions"),
     "initial_elo": 1500,
     "k_factor": 32,  # Elo K-factor for rating changes
 }
@@ -211,7 +222,7 @@ PREDICTIONS_CONFIG = {
 # Constitution settings
 CONSTITUTION_CONFIG = {
     "enabled": True,
-    "storage_path": "data/constitution/constitution.json",
+    "storage_path": data_path("constitution", "constitution.json"),
     "enforce_in_prompts": True,
     "allow_amendments": True,
     "amendment_vote_threshold": 0.75,  # 75% of models must agree

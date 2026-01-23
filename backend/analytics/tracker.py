@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from threading import Lock
 
 from .models import ModelMetrics, QueryMetrics, AnalyticsSummary
+from ..config import data_path
 
 
 class AnalyticsTracker:
@@ -29,10 +30,7 @@ class AnalyticsTracker:
         if self._initialized:
             return
 
-        self.storage_path = os.path.join(
-            os.path.dirname(__file__),
-            '..', '..', 'data', 'analytics.json'
-        )
+        self.storage_path = data_path("analytics.json")
         self.model_metrics: Dict[str, ModelMetrics] = {}
         self.query_history: List[QueryMetrics] = []
         self.cache_hits = 0

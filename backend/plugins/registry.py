@@ -5,12 +5,15 @@ import os
 from typing import Dict, List, Optional, Any, Type
 from pathlib import Path
 from .base import Plugin, PluginConfig
+from ..config import data_path
 
 
 class PluginRegistry:
     """Manages plugin registration and execution."""
 
-    def __init__(self, storage_path: str = "data/plugins/config.json"):
+    def __init__(self, storage_path: str = None):
+        if storage_path is None:
+            storage_path = data_path("plugins", "config.json")
         self.storage_path = storage_path
         self.plugins: Dict[str, Plugin] = {}
         self._ensure_storage_dir()

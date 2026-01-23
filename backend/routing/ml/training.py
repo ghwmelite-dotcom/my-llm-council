@@ -9,6 +9,7 @@ from dataclasses import dataclass, asdict
 
 from .features import extract_features
 from .model import get_routing_model
+from ...config import data_path
 
 
 @dataclass
@@ -26,7 +27,9 @@ class TrainingSample:
 class TrainingDataStore:
     """Stores training data for the routing model."""
 
-    def __init__(self, storage_path: str = "data/routing/training_data.json"):
+    def __init__(self, storage_path: str = None):
+        if storage_path is None:
+            storage_path = data_path("routing", "training_data.json")
         self.storage_path = storage_path
         self.samples: List[TrainingSample] = []
         self._ensure_dir()

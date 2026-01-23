@@ -10,12 +10,15 @@ from dataclasses import asdict
 
 from .models import User
 from .password import hash_password, verify_password
+from ..config import data_path
 
 
 class UserStore:
     """Manages user data storage."""
 
-    def __init__(self, storage_path: str = "data/auth/users.json"):
+    def __init__(self, storage_path: str = None):
+        if storage_path is None:
+            storage_path = data_path("auth", "users.json")
         self.storage_path = storage_path
         self.users: Dict[str, User] = {}
         self.username_index: Dict[str, str] = {}  # username -> user_id

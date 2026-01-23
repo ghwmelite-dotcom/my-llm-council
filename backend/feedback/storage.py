@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from threading import Lock
 
+from ..config import data_path
+
 
 @dataclass
 class Feedback:
@@ -48,10 +50,7 @@ class FeedbackStorage:
         if self._initialized:
             return
 
-        self.storage_path = os.path.join(
-            os.path.dirname(__file__),
-            '..', '..', 'data', 'feedback.json'
-        )
+        self.storage_path = data_path("feedback.json")
         self.feedback: List[Feedback] = []
         self._load()
         self._initialized = True
