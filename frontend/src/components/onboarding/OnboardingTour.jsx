@@ -166,18 +166,13 @@ export default function OnboardingTour({ onComplete }) {
         />
       )}
 
-      {/* Tour dialog */}
-      <div
-        className={`onboarding-dialog ${step.position}`}
-        style={
-          targetRect && step.position !== 'center'
-            ? getDialogPosition(targetRect, step.position)
-            : undefined
-        }
-      >
-        <div className="onboarding-icon">{step.icon}</div>
-        <h3 className="onboarding-title">{step.title}</h3>
-        <p className="onboarding-description">{step.description}</p>
+      {/* Tour dialog - always centered for stability */}
+      <div className="onboarding-dialog">
+        <div className="onboarding-content">
+          <div className="onboarding-icon">{step.icon}</div>
+          <h3 className="onboarding-title">{step.title}</h3>
+          <p className="onboarding-description">{step.description}</p>
+        </div>
 
         {/* Progress dots */}
         <div className="onboarding-progress">
@@ -216,45 +211,3 @@ export default function OnboardingTour({ onComplete }) {
   );
 }
 
-function getDialogPosition(targetRect, position) {
-  const dialogWidth = 360;
-  const dialogHeight = 280;
-  const padding = 16;
-
-  switch (position) {
-    case 'right':
-      return {
-        top: Math.max(padding, targetRect.top),
-        left: targetRect.left + targetRect.width + padding,
-      };
-    case 'left':
-      return {
-        top: Math.max(padding, targetRect.top),
-        left: Math.max(padding, targetRect.left - dialogWidth - padding),
-      };
-    case 'bottom':
-      return {
-        top: targetRect.top + targetRect.height + padding,
-        left: Math.max(
-          padding,
-          Math.min(
-            window.innerWidth - dialogWidth - padding,
-            targetRect.left + targetRect.width / 2 - dialogWidth / 2
-          )
-        ),
-      };
-    case 'top':
-      return {
-        top: Math.max(padding, targetRect.top - dialogHeight - padding),
-        left: Math.max(
-          padding,
-          Math.min(
-            window.innerWidth - dialogWidth - padding,
-            targetRect.left + targetRect.width / 2 - dialogWidth / 2
-          )
-        ),
-      };
-    default:
-      return undefined;
-  }
-}

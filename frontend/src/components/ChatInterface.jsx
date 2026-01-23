@@ -151,34 +151,44 @@ export default function ChatInterface({
 
       {conversation.messages.length === 0 && (
         <div className="input-section">
-          <div className="input-toolbar">
-            <QueryTemplates
-              onSelectTemplate={(template) => setInput(template)}
-              disabled={isLoading}
-            />
+          <div className="input-container">
+            {/* Toolbar above input */}
+            <div className="input-toolbar">
+              <div className="toolbar-left">
+                <QueryTemplates
+                  onSelectTemplate={(template) => setInput(template)}
+                  disabled={isLoading}
+                />
+                <ImageUpload
+                  onImagesChange={setImageIds}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            {/* Input form */}
+            <form className="input-form" onSubmit={handleSubmit}>
+              <div className="input-wrapper">
+                <textarea
+                  className="message-input"
+                  placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  rows={3}
+                />
+                <button
+                  type="submit"
+                  className="send-button"
+                  disabled={!input.trim() || isLoading}
+                >
+                  <span className="send-icon">↑</span>
+                  <span className="send-text">Send</span>
+                </button>
+              </div>
+            </form>
           </div>
-          <ImageUpload
-              onImagesChange={setImageIds}
-              disabled={isLoading}
-            />
-          <form className="input-form" onSubmit={handleSubmit}>
-            <textarea
-              className="message-input"
-              placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isLoading}
-              rows={3}
-            />
-            <button
-              type="submit"
-              className="send-button"
-              disabled={!input.trim() || isLoading}
-            >
-              Send
-            </button>
-          </form>
         </div>
       )}
     </div>

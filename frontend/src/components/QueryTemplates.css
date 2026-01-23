@@ -18,7 +18,7 @@
 
 .templates-toggle:hover:not(:disabled) {
   background: var(--bg-secondary);
-  border-color: var(--primary-color);
+  border-color: var(--accent-green);
   color: var(--text-primary);
 }
 
@@ -28,16 +28,28 @@
 }
 
 .templates-toggle.open {
-  border-color: var(--primary-color);
-  background: var(--bg-secondary);
+  border-color: var(--accent-green);
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--accent-green);
 }
 
 .toggle-icon {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .toggle-label {
   font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .templates-toggle {
+    padding: 8px 12px;
+  }
+
+  .toggle-label {
+    display: none;
+  }
 }
 
 .templates-panel {
