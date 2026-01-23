@@ -7,6 +7,9 @@
   background: rgba(0, 0, 0, 0.75);
   z-index: 2000;
   animation: fadeIn 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes fadeIn {
@@ -31,7 +34,7 @@
 }
 
 .onboarding-dialog {
-  position: fixed;
+  position: relative;
   width: 360px;
   max-width: calc(100vw - 32px);
   background: white;
@@ -42,22 +45,21 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
   z-index: 2002;
   animation: dialogSlide 0.4s ease-out;
+  pointer-events: auto;
 }
 
 .onboarding-dialog.center {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  /* Centered by parent flexbox */
 }
 
 @keyframes dialogSlide {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -191,83 +193,13 @@
   color: #9ca3af;
 }
 
-/* Non-centered dialog positioning adjustments */
-.onboarding-dialog:not(.center) {
-  animation: none;
-}
-
-.onboarding-dialog.right {
-  animation: slideFromLeft 0.3s ease-out;
-}
-
-.onboarding-dialog.left {
-  animation: slideFromRight 0.3s ease-out;
-}
-
-.onboarding-dialog.bottom {
-  animation: slideFromTop 0.3s ease-out;
-}
-
-.onboarding-dialog.top {
-  animation: slideFromBottom 0.3s ease-out;
-}
-
-@keyframes slideFromLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideFromTop {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* All dialogs use centered positioning via flexbox */
 
 /* Responsive */
 @media (max-width: 640px) {
   .onboarding-dialog {
     width: calc(100vw - 32px);
     padding: 24px;
-  }
-
-  .onboarding-dialog:not(.center) {
-    /* On mobile, always center the dialog */
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%);
   }
 
   .onboarding-icon {
